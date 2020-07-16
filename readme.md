@@ -3,6 +3,10 @@
 
 ## code
 ```
+package main
+
+import "fmt"
+
 type heator interface {
 	heat()
 }
@@ -67,15 +71,19 @@ any has interface heator, type = main.someThing, val = {stone}
 heator has interface coolor, type = main.someThing, val = {stone}
 ```
 
-## Analize
+## My Opinion
 
-### Interface has two references internal 
+### Interface composed of two references internal 
 
-Under hood, each reference is one word size in memory. You can imagine it as something similiar to Java reference or C++ pointer. 
+Under hood, each reference is one word size in memory. 
 
-The first reference is the dynamic itable which is built at runtime. 
+You can imagine reference similiar to Java reference or C++ pointer. 
 
-Itable always build for first time then cache. 
+The first reference is the dynamic itable which is built dynamiclly, i.e. in runtime.
+
+You can imagine itable similiar to Java Interface or C++ vtable, but Java and C++ implement it staticlly in compile time.
+
+Itable is built first time with usage, i.e. the assignment to the interface variable, then be cached. 
 
 The complexity is O(m+n), m == the number of concrete struct methods, n == the number of interface methods. 
 
@@ -83,7 +91,7 @@ The complexity is O(m+n), m == the number of concrete struct methods, n == the n
 
 The second reference is the copy of the concrete value, which is not an interface. 
 
-It could be a type of struct or pointer.
+It could be a type of struct or pointer which could point to a struct (but not an interface).
 
 The part of code above can demonstrate
 ```
@@ -97,7 +105,10 @@ The part of code above can demonstrate
 
 From the above, it is a matching game.
 
-If Type is a interface, match the total methods in Type to the second reference of i. 
+If Type is an interface, go try to match the total methods in Type to the second reference of i. 
 
-If it can match the methonds in the concrete value in i, i.e the second reference, return the concrete value without panic.
+If it can match all the methonds in the concrete value in i, i.e the second reference, return the concrete value without panic.
 
+### Special for pointer
+
+check pointer_interface.go

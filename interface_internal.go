@@ -52,4 +52,6 @@ func main() {
 	if ok3 {
 		fmt.Printf("heator has interface coolor, type = %T, val = %v\n", v3, v3)
 	}
+
+	tryDuckorWithPointer()
 }
