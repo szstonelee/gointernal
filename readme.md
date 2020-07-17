@@ -3,7 +3,9 @@
 
 ## Golang interface assign and assertion
 
-Golang interface is something which run not as simple as the code looks like, for example
+Golang interface is implicit and does a lot of complicated stuff under hood. 
+
+Normally, We use interface for assignment and assertion, e.g.
 
 ```
 // NOTE: the following code is pseduo
@@ -11,7 +13,7 @@ var s struct {} = {...}
 var i1 interface one {...}
 var i2 interface two {...}
 
-// And empty interface is more complicated 
+// And empty interface makes more complicated 
 var any interface{}
 
 // assingment, two modes
@@ -29,7 +31,7 @@ v2 := i1.(Type of interface)
 
 Please reference [Go Data Structures: Interfaces](https://research.swtch.com/interfaces) first
 
-## real code to expose the internal
+## real code to show how it runs
 ```
 package main
 
@@ -99,7 +101,7 @@ go run interface_internal.go (if you use the above code)
 
 or 
 
-go run interface_internal.go pointer_interface.go (if you use the code in GitHub which has one more source file)
+go run interface_internal.go pointer_interface.go (if you use the code in GitHub which has one more source file, pointer_interface.go)
 
 ```
 reveal interface assignment and assertion ......
@@ -115,33 +117,100 @@ h, interface heator, assert interface coolor, type = main.someThing, val = {ston
 
 ## My Opinion & Guess
 
-### Interface composed of two references internal 
+### Interface composed of two internal references 
 
-Under hood, interface is composed of two referecnes, each reference is one word size in memory. 
+Under hood, the nterface is composed of two referecnes, each reference is one word size in memory. 
 
-You can imagine Golang interface internal reference similiar to Java reference or C++ smart pointer. 
+You can imagine the references similiar to Java reference or C++ smart pointer. 
+
+### The first reference is itable (plus value type)
 
 The first reference is the dynamic itable which is built dynamiclly, i.e. in runtime.
 
 You can imagine itable similiar to Java Interface or C++ vtable, but Java and C++ implement it staticlly, i.e. in compile time.
 
-Itable will be built first time with usage, i.e. at the time of assignment to the interface variable, then be cached. 
+Itable will be built first time with assignment, then be cached. 
 
 The complexity is O(m+n), m == the number of concrete struct methods, n == the number of interface methods. 
 
-### The second reference is always the concrete value
+NOTE 1: when it runs with function parameter or return result, the assignment may be implicit.
 
-The second reference is the copy of the concrete value, which is not an interface. 
+like 
 
-It could be a type of struct or pointer which points to a struct (but not an interface).
+```
+type foo struct{ name string }
 
-The part of code above can demonstrate
+func help(i interface{}) string {
+	return "def"
+}
+
+func toInterface(f foo) interface{} {
+	return f
+}
+
+func main() {
+	var f foo = foo{"abc"}
+
+	fmt.Println(help(f))
+
+	i := toInterface(f)
+	if v, ok := i.(foo); ok {
+		fmt.Println(v)
+	}
+}
+```
+
+NOTE 2:
+
+The first reference has one more field, i.e. the value type, which is paired with the second reference to describe the data.
+
+After assignment, the value type in first reference is static until another assignment to the interface variable. 
+
+### The second reference is always the copy of concrete value
+
+The second reference is the copy of the concrete value, which can not be an interface. [Interfaces do not hold interface values](https://blog.golang.org/laws-of-reflection)
+
+I do not try the value of pointer to interface, but I think it is illegal with interface. And note: pointer to interface is rarely used.
+
+Concrete value could be:
+1. type of struct OR 
+2. pointer to a struct 
+3. but can not be interface (and pointer to an interface) (check pointer_interface.go)
+
+The following code which is part of the above can demonstrate
 ```
 	v3, ok3 := h.(coolor)
 	if ok3 {
-		fmt.Printf("heator has interface coolor, type = %T, val = %v\n", v3, v3)
+		fmt.Printf("h, interface heator, assert interface coolor, type = %T, val = %v\n", v3, v3)
 	}
 ```
+
+If h not save the real value, it can not assert sucessuflly for the interface coolor.
+
+### assginment to interface with concrete value or another interface is same
+
+```
+some := someThing{name: "Stone:}
+
+var h1 heator
+var h2 heator
+var any interface{}
+
+h1 = some
+any = some
+
+h2 = any  // NOTE: h2 has the same concrete value of h1, which is "Stone"
+```
+
+h1 and h2 have the same concrete value, i.e. "Stone", but they are different copies
+
+#### the concrete value can be pointer to struct or struct itself if the receiver is struct it self
+
+check pointer_interface.go for demonstration
+
+#### the concrete value must be pointer to struct if the receiver is a pointer
+
+check pointer_interface.go for demonstration
 
 ### Type assertion, e.g. v := i.(Type) when Type is interface
 

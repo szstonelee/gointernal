@@ -59,4 +59,6 @@ func main() {
 	}
 
 	tryDuckorWithPointer()
+
+	tryAssignInterface()
 }
