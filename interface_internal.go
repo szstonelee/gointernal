@@ -37,7 +37,7 @@ func main() {
 
 	v0, ok0 := any.(someThing)
 	if ok0 {
-		fmt.Printf("\nany, empty interface, assert struct someThing, type = %T, val = %v\n", v0, v0)
+		fmt.Printf("any, empty interface, assert struct someThing, type = %T, val = %v\n", v0, v0)
 	}
 
 	v1, ok1 := any.(coolor)
