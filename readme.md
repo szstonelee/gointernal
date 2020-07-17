@@ -1,7 +1,7 @@
 
 # Golang interface internal
 
-## Golang interface assign and assertion
+## Golang interface assignment and assertion
 
 Golang interface is implicit and does a lot of complicated stuff under hood. 
 
@@ -65,15 +65,14 @@ func main() {
 	var h heator = some
 	h.heat()
 
-	var c coolor = some // NOTE: var c cooler = h, can not be compiled because interface can not be receiver
+	var c coolor = some // NOTE: var c cooler = h, compile failed
 	c.cool()
-	fmt.Println()
 
 	var any interface{} = some // NOTE: var any interface{} = h, can be compiled and has the same result
 
 	v0, ok0 := any.(someThing)
 	if ok0 {
-		fmt.Printf("any, empty interface, assert struct someThing, type = %T, val = %v\n", v0, v0)
+		fmt.Printf("\nany, empty interface, assert struct someThing, type = %T, val = %v\n", v0, v0)
 	}
 
 	v1, ok1 := any.(coolor)

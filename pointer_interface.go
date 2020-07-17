@@ -15,11 +15,11 @@ func (d *duckStuff) quark() {
 }
 
 func tryDuckorWithPointer() {
-	fmt.Println("\ntyrDuckorWithPointer ....")
+	fmt.Printf("\ntyrDuckorWithPointer ....\n\n")
 
 	d := duckStuff{duckName: "Stone"}
 
-	fmt.Println("\nassign duckStuff to any, which is empty interface")
+	fmt.Println("assign duckStuff to any, which is empty interface")
 	var any interface{} = d
 
 	v0, ok0 := any.(duckStuff)
@@ -66,7 +66,7 @@ type bar struct{}
 func (b *bar) Dummy() {}
 
 func tryAssignInterface() {
-	fmt.Printf("\ntryAssignInterface .......\n")
+	fmt.Printf("\ntryAssignInterface .......\n\n")
 
 	var f1 foo
 	var f2 *foo = &foo{}
