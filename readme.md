@@ -102,12 +102,15 @@ or
 go run interface_internal.go pointer_interface.go (if you use the code in GitHub which has one more source file)
 
 ```
+reveal interface assignment and assertion ......
+
 I am heating with name = stone
 I am cooling with name = stone
-any has concrete someThing, type = main.someThing, val = {stone}
-any has interface coolor, type = main.someThing, val = {stone}
-any has interface heator, type = main.someThing, val = {stone}
-heator has interface coolor, type = main.someThing, val = {stone}
+
+any, empty interface, assert struct someThing, type = main.someThing, val = {stone}
+any, empty interface, assert interface coolor, type = main.someThing, val = {stone}
+any, empty interface, assert interface heator, type = main.someThing, val = {stone}
+h, interface heator, assert interface coolor, type = main.someThing, val = {stone}
 ```
 
 ## My Opinion & Guess
