@@ -19,7 +19,7 @@ func main() {
 
 	// interface assingment
 	var i myInterface = s // assignment of struct
-	var any interface{} = i // asiginment of interface
+	var any interface{} = i // assignment of interface
 
 	// interface assertion
 	v1 := i.(myStruct)  // assertion of struct
@@ -140,12 +140,12 @@ After assignment, the value type in first reference is unchangeable until anothe
 
 The second reference is the copy of the concrete value, which can not be an interface. [Interfaces do not hold interface values](https://blog.golang.org/laws-of-reflection)
 
-I do not try the value of pointer to interface, but I think it is illegal with interface. And note: pointer to interface is rarely used.
+I do not try the pointer to interface, but I think it is illegal as interface itself. Note: pointer to interface is rarely used.
 
 Concrete value could be:
-1. type of struct OR 
-2. pointer to a struct 
-3. but can not be interface (and pointer to an interface) (check pointer_interface.go)
+1. the copy of the memory with the type of struct OR 
+2. the copy of the memory with the pointer, which points to an entity of type of struct 
+3. can not be any interface (and pointer to an interface)
 
 The following code which is part of the above can demonstrate
 ```
@@ -155,7 +155,9 @@ The following code which is part of the above can demonstrate
 	}
 ```
 
-If h not save the real value, it can not assert sucessuflly for the interface coolor.
+If h does not hold the copy of real value with the type struct of someThing, 
+
+it can not assert sucessuflly for the interface coolor.
 
 ### assginment to interface with concrete value or another interface
 
@@ -178,9 +180,44 @@ h1 and h2 have the same concrete value, i.e. "Stone", but they are different cop
 
 check pointer_interface.go for demonstration
 
+```
+type itfer interface {Dummy()}
+
+type foo struct{}
+
+func (f foo) Dummy() {}
+
+func main() {
+	var f1 foo
+	var f2 *foo = &foo{}
+
+	var i1 itfer = f1
+	fmt.Printf("i1 from f1, type = %T\n", i1)
+	var i2 itfer = f2
+	fmt.Printf("i2 from f2, type = %T\n", i2)
+}
+```
+
 #### the concrete value must be pointer to struct if the receiver is a pointer
 
 check pointer_interface.go for demonstration
+
+```
+type itfer interface {Dummy()}
+
+type bar struct{}
+
+func (b *bar) Dummy() {}
+
+func main() {
+	var b1 bar
+	var b2 *bar = &b1
+
+	// var i3 itfer = b1	// NOTE: compile fail
+	var i4 itfer = b2
+	fmt.Printf("i4 from b2, type = %T\n", i4)
+}
+```
 
 ### Type assertion with interface, 
 
@@ -204,7 +241,7 @@ Golang compilation just check validation in this senario by checking the latter 
 
 ### implict assignment
 
-when it runs with function parameter or return result, the interface assignment is implicit.
+When it runs with function parameter or return result, the interface assignment is implicit.
 
 e.g. 
 
@@ -216,13 +253,13 @@ func help(i interface{}) string {
 }
 
 func toInterface(f foo) interface{} {
-	return f
+	return f  // an implicit assignment for return
 }
 
 func main() {
 	var f foo = foo{"abc"}
 
-	fmt.Println(help(f))
+	fmt.Println(help(f))  // an implimit assignment for the parameter in help()
 
 	i := toInterface(f)
 	if v, ok := i.(foo); ok {
@@ -234,3 +271,7 @@ func main() {
 ### More trick when the concrete is a pointer
 
 check pointer_interface.go
+
+### other build-in type
+
+other build-in types like stirng, slice, map, numerics, is same like struct.
