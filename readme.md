@@ -37,11 +37,11 @@ package main
 
 import "fmt"
 
-type heator interface {
+type heater interface {
 	heat()
 }
 
-type coolor interface {
+type cooler interface {
 	cool()
 }
 
@@ -60,10 +60,10 @@ func (s someThing) cool() {
 func main() {
 	some := someThing{name: "stone"}
 
-	var h heator = some
+	var h heater = some
 	h.heat()
 
-	var c coolor = some // NOTE: var c cooler = h, compile failed
+	var c cooler = some // NOTE: var c cooler = h, compile failed
 	c.cool()
 
 	var any interface{} = some // NOTE: var any interface{} = h, can be compiled and has the same result
@@ -73,21 +73,21 @@ func main() {
 		fmt.Printf("any, empty interface, assert struct someThing, type = %T, val = %v\n", v0, v0)
 	}
 
-	v1, ok1 := any.(coolor)
+	v1, ok1 := any.(cooler)
 	if ok1 {
-		fmt.Printf("any, empty interface, assert interface coolor, type = %T, val = %v\n", v1, v1)
+		fmt.Printf("any, empty interface, assert interface cooler, type = %T, val = %v\n", v1, v1)
 	}
 
-	v2, ok2 := any.(heator)
+	v2, ok2 := any.(heater)
 	if ok2 {
-		fmt.Printf("any, empty interface, assert interface heator, type = %T, val = %v\n", v2, v2)
+		fmt.Printf("any, empty interface, assert interface heater, type = %T, val = %v\n", v2, v2)
 	}
 
 	// any = c, compile OK
 	// h = c, compile fail
-	v3, ok3 := h.(coolor)
+	v3, ok3 := h.(cooler)
 	if ok3 {
-		fmt.Printf("h, interface heator, assert interface coolor, type = %T, val = %v\n", v3, v3)
+		fmt.Printf("h, interface heater, assert interface cooler, type = %T, val = %v\n", v3, v3)
 	}
 }
 ```
@@ -101,9 +101,9 @@ I am heating with name = stone
 I am cooling with name = stone
 
 any, empty interface, assert struct someThing, type = main.someThing, val = {stone}
-any, empty interface, assert interface coolor, type = main.someThing, val = {stone}
-any, empty interface, assert interface heator, type = main.someThing, val = {stone}
-h, interface heator, assert interface coolor, type = main.someThing, val = {stone}
+any, empty interface, assert interface cooler, type = main.someThing, val = {stone}
+any, empty interface, assert interface heater, type = main.someThing, val = {stone}
+h, interface heater, assert interface cooler, type = main.someThing, val = {stone}
 ```
 
 NOTE: github has more code than above, so it needs to run like this  
@@ -149,9 +149,9 @@ Concrete value could be:
 
 The following code which is part of the above can demonstrate
 ```
-	v3, ok3 := h.(coolor)
+	v3, ok3 := h.(cooler)
 	if ok3 {
-		fmt.Printf("h, interface heator, assert interface coolor, type = %T, val = %v\n", v3, v3)
+		fmt.Printf("h, interface heater, assert interface cooler, type = %T, val = %v\n", v3, v3)
 	}
 ```
 
@@ -164,8 +164,8 @@ it can not assert sucessuflly for the interface coolor.
 ```
 some := someThing{name: "Stone:}
 
-var h1 heator
-var h2 heator
+var h1 heater
+var h2 heater
 var any interface{}
 
 h1 = some
@@ -231,7 +231,7 @@ If all matched, it returns the concrete value without panic, i.e. a new copy to 
 
 ### interface assignment with interface
 
-Although h, variable of heator interface, can asssert type of cooler interface,
+Although h, variable of heater interface, can asssert type of cooler interface,
 
 You can not assign c to h when in compile time. It will fail.
 
