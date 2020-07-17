@@ -130,7 +130,7 @@ Itable will be built first time with assignment, then be cached.
 
 The complexity is O(m+n), m == the number of concrete struct methods, n == the number of interface methods. 
 
-#### the value type
+#### value type
 
 The first reference has one more field, the value type, which is paired with the second reference to describe the data.
 
@@ -188,15 +188,15 @@ e.g. v := i.(Type) when Type is interface
 
 From the above, it is a matching game.
 
-If Type is an interface, Golang tries to match the total methods in Type to the second reference of i. 
+If Type is an interface, Golang tries to match the total methods in Type, which is interface, to the concrete value of i. 
 
-If type assertion can match all the methonds in the concrete value in i, it returns(copy) the concrete value without panic.
+If all matched, it returns the concrete value without panic, i.e. a new copy to v.
 
 ### interface assignment with interface
 
 Although h, variable of heator interface, can asssert type of cooler interface,
 
-You can not assign c to h. In compile time, it fails the compilation.
+You can not assign c to h when in compile time. It will fail.
 
 But you can assgin c to empty interface, it passes the compilation.
 
