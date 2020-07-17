@@ -23,34 +23,39 @@ func (s someThing) cool() {
 }
 
 func main() {
-	some := someThing{"stone"}
+	fmt.Printf("reveal interface assignment and assertion ......\n\n")
+
+	some := someThing{name: "stone"}
 
 	var h heator = some
 	h.heat()
 
 	var c coolor = some // NOTE: var c cooler = h, can not be compiled because interface can not be receiver
 	c.cool()
+	fmt.Println()
 
-	var any interface{} = h // NOTE: var any interface{} = some, can be compiled and has the same result
+	var any interface{} = some // NOTE: var any interface{} = h, can be compiled and has the same result
 
 	v0, ok0 := any.(someThing)
 	if ok0 {
-		fmt.Printf("any has concrete someThing, type = %T, val = %v\n", v0, v0)
+		fmt.Printf("any, empty interface, assert struct someThing, type = %T, val = %v\n", v0, v0)
 	}
 
 	v1, ok1 := any.(coolor)
 	if ok1 {
-		fmt.Printf("any has interface coolor, type = %T, val = %v\n", v1, v1)
+		fmt.Printf("any, empty interface, assert interface coolor, type = %T, val = %v\n", v1, v1)
 	}
 
 	v2, ok2 := any.(heator)
 	if ok2 {
-		fmt.Printf("any has interface heator, type = %T, val = %v\n", v2, v2)
+		fmt.Printf("any, empty interface, assert interface heator, type = %T, val = %v\n", v2, v2)
 	}
 
+	// any = c, compile OK
+	// h = c, compile fail
 	v3, ok3 := h.(coolor)
 	if ok3 {
-		fmt.Printf("heator has interface coolor, type = %T, val = %v\n", v3, v3)
+		fmt.Printf("h, interface heator, assert interface coolor, type = %T, val = %v\n", v3, v3)
 	}
 
 	tryDuckorWithPointer()
