@@ -116,7 +116,7 @@ go run interface_internal.go pointer_interface.go
 
 Under hood, the interface is composed of two referecnes, each reference is one word size in memory. 
 
-You can imagine the references similiar to Java reference or C++ smart pointer. 
+You can imagine the references similar to Java reference or C++ smart pointer. 
 
 ### The first reference: itable + value type
 
@@ -124,7 +124,7 @@ You can imagine the references similiar to Java reference or C++ smart pointer.
 
 The first reference is the dynamic itable which is built dynamiclly, i.e. in runtime.
 
-You can imagine itable similiar to Java Interface or C++ vtable, but Java and C++ implement it staticlly, i.e. in compile time.
+You can imagine itable similar to Java Interface or C++ vtable, but Java and C++ implement it staticlly, i.e. in compile time.
 
 Itable will be built first time with assignment, then be cached. 
 
@@ -157,7 +157,7 @@ The following code which is part of the above can demonstrate
 
 If h does not hold the copy of real value with the type struct of someThing, 
 
-it can not assert sucessuflly for the interface coolor.
+it can not assert sucessuflly for the interface cooler.
 
 ### assginment to interface with concrete value or another interface
 
@@ -267,6 +267,8 @@ func main() {
 	}
 }
 ```
+
+There are more info about implicit for interface, check [Golang nil](nil.md)
 
 ### More trick when the concrete is a pointer
 

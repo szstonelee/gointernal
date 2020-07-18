@@ -28,7 +28,7 @@ A slice variable has three items (fields),
 2. _len, internal length, int size
 3. _cap, internal capacity, int size
 
-NOTE: _ptr is not a Golang pointer type which will be described below.
+NOTE: _ptr is not a Golang pointer type. Golang pointer will be described below.
 
 ## When slice is nil
 
@@ -67,7 +67,7 @@ _ptr = buf;
 assert(_ptr != nullptr);
 ```
 
-Or From Java's view, it looks like
+Or from Java's view, it looks like
 ```
 _ptr = null;  // when constructed
 
@@ -135,7 +135,7 @@ var a []int // a is nil
 p = &a
 fmt.Println(p == nil) // will print false
 ```
-because a has been constructed, the & opertator will assign the address of a to _ptr.
+because a has been constructed (but right now a is nil), the & opertator will assign the address of a to _ptr.
 
 It means: _ptr != nullptr
 
@@ -168,7 +168,7 @@ For assignment of interface, there are three modes:
 where ob is not interface, it means
 ```
 _ptr_to_type = type of ob // remember Golang is strictly typed, so type exists
-_concrete_val = ob  // So when ob is nil, it is OK
+_concrete_val = ob  // So when ob is nil, it is OK. And please note this is a copy from ob to _concrete_val
 ```
 
 ## Assignment mode 2: i = iOther
@@ -224,10 +224,10 @@ func f(i interface{}) {
 
 }
 
-f(a)  // will assign a to i, so there is a conversion to interface
+f(a)  // will assign a to i, so there is implicit assignment for interface
 ```
 
-## as return from func
+## implicit as return from function
 
 ```
 type myStruct struct {}
@@ -237,7 +237,7 @@ func (myStruct) Error() string {return "error msg"}
 func f() error {
   a := myStruct{}
   DoSomething()
-  return a  // will assign a to error interface, return conversion occur
+  return a  // will assign a to return value which is error interface, implicit for interface
 }
 ```
 
@@ -326,3 +326,5 @@ func return Error() error {
   return nil
 }
 ```
+
+[Reference is here](https://golang.org/doc/faq#nil_error)
