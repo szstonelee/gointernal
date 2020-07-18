@@ -153,11 +153,11 @@ func viewRecordForGood(w http.ResponseWriter, r *http.Request) error {
   record := new(Record)
 
   if err := datastore.Get(c, key, record); err != nil {
-        return err
+    return err
   }
 
   if err := viewTemplate.Execute(w, record); err != nil {
-        return err
+    return err
   }
 
 	DoOtherThingsWhenErrorJustReturn()
