@@ -11,14 +11,15 @@ type myFunc func(int, []int) (string, error)
 type myFunc2 func() (string, error)
 
 func main() {
-	var a int = 111
+	var a int = 1
 	var b string = "I am a string!!!"
 	f1 := func(ar1 int, ar2 []int) (string, error) {
 		fmt.Println("closure sample", a, b) // closure
 		fmt.Println("argument print", ar1, ar2)
+		a = 9
 		return "abc", nil
 	}
-	_, err := f1(11, []int{22, 33, 44})
+	_, err := f1(2, []int{4, 5, 6})
 	if err != nil {
 		return
 	}
@@ -53,7 +54,7 @@ func main() {
 	} else {
 		fmt.Println("f1 assign from f2, f1 is not myFunc though f2 is myFunc")
 		fmt.Println("call f1() which is assigned from f2")
-		f1(111, []int{222, 333, 444, 555})
+		f1(111, []int{333, 444, 555, 666})
 	}
 }
 ```
@@ -61,31 +62,43 @@ func main() {
 # Run result
 
 ```
-closure sample 111 I am a string!!!
-argument print 11 [22 33 44]
+closure sample 1 I am a string!!!
+argument print 2 [4 5 6]
 f1 type = func(int, []int) (string, error), main.myFunc
 f1 is not myFunc
 f2 type = main.myFunc, main.myFunc
 f2 is myFunc
 f1 assign from f2, f1 is not myFunc though f2 is myFunc
 call f1() which is assigned from f2
-closure sample 111 I am a string!!!
-argument print 111 [222 333 444 555]
+closure sample 9 I am a string!!!
+argument print 111 [333 444 555 666]
 f2 print one more line....
 ```
 
 # Conclusion
 
-## closure
+## Support closure
 
 ```
 	f1 := func(ar1 int, ar2 []int) (string, error) {
 		fmt.Println("closure sample", a, b) // closure, can use varirable out of func scope
 ```
 
-like C++ & Java Lambda Function. But like Python clousure, no need to declaration. Easy to use.
+Golang func has the attribute of closure.
 
-So I think it is passed by referenc.
+It is like C++ & Java Lambda Function. 
+
+But it is more like Python clousure, no need to declaration. Easy to use.
+
+## Closure capture: passed by reference.
+
+```
+f1() {
+	a = 9
+}
+
+closure sample 9 I am a string!!!
+```
 
 ## Same signature, but different type
 
@@ -142,7 +155,7 @@ func viewRecordForGood(w http.ResponseWriter, r *http.Request) error {
   if err := datastore.Get(c, key, record); err != nil {
         return err
   }
-	
+
   if err := viewTemplate.Execute(w, record); err != nil {
         return err
   }
