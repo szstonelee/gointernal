@@ -78,8 +78,8 @@ f2 print one more line....
 ## Support closure
 
 ```
-	f1 := func(ar1 int, ar2 []int) (string, error) {
-		fmt.Println("closure sample", a, b) // closure, can use varirable out of func scope
+f1 := func(ar1 int, ar2 []int) (string, error) {
+	fmt.Println("closure sample", a, b) // closure, can use varirable out of func scope
 ```
 
 Golang func has the attribute of closure.
@@ -100,13 +100,13 @@ closure sample 9 I am a string!!!
 
 ## Same signature, but different type
 
-f1 and f2 have the same signature, but they are different type.
+f1 and f2 have the same signature, but they are different types.
 
 f1 type: func(int, []int) (string, error)
 
 f2 type: main.myFunc
 
-It is important for Interface.
+It is important for interface implementation.
 
 ## Type converstion 
 
@@ -128,7 +128,7 @@ type myFunc2 func(int, []int) error
 
 ## Assignment 
 
-Assginment is legal for same signature, but the types do not change
+Assginment is legal for same signature, but the type does not change.
 
 ```
 f1 = f2
@@ -143,9 +143,11 @@ if _, ok := any.(myFunc); ok {
 
 [Error handling and Go](https://blog.golang.org/error-handling-and-go)
 
-http.Handle()
+Check: http.Handle()
 
-I have different idea about the http.HandleFunc in the 'Error Handling and Go', code could look like this
+I have different idea about the http.HandleFunc in the 'Error Handling and Go'.
+
+Code could look like this
 
 ```
 func init() {
