@@ -8,22 +8,20 @@ import "fmt"
 
 type myFunc func(int, []int) (string, error)
 
-type myFunc2 func() (string, error)
+type myFunc2 func(int, []int) error
 
 func main() {
 	var a int = 1
 	var b string = "I am a string!!!"
+
 	f1 := func(ar1 int, ar2 []int) (string, error) {
 		fmt.Println("closure sample", a, b) // closure
 		fmt.Println("argument print", ar1, ar2)
 		a = 9
 		return "abc", nil
 	}
-	_, err := f1(2, []int{4, 5, 6})
-	if err != nil {
-		return
-	}
 
+	f1(2, []int{4, 5, 6})
 	fmt.Printf("f1 type = %T, %T\n", f1, myFunc(f1))
 
 	var any interface{} = f1
@@ -46,7 +44,7 @@ func main() {
 		fmt.Println("f2 is myFunc")
 	}
 
-	// f3 := myFunc2(f2)    // illegal
+	// f3 := myFunc2(f2) // illegal
 	f1 = f2
 	any = f1
 	if _, ok := any.(myFunc); ok {
@@ -110,14 +108,27 @@ f2 type: main.myFunc
 
 It is important for Interface.
 
-## Type converstion is legal when signatures are same
+## Type converstion 
+
+### legal when signatures are same
 
 ```
 fmt.Printf("f1 type = %T, %T\n", f1, myFunc(f1))	// which print main.myFunc
+```
+
+### illegal when signatures are not same, signature includes return
+
+```
+type myFunc func(int, []int) (string, error)
+
+type myFunc2 func(int, []int) error
+
 // f3 := myFunc2(f2)    // illegal
 ```
 
-## assignment is legal for same signature, but type does not change
+## Assignment 
+
+Assginment is legal for same signature, but the types do not change
 
 ```
 f1 = f2
@@ -138,7 +149,7 @@ I have different idea about the http.HandleFunc in the 'Error Handling and Go', 
 
 ```
 func init() {
-    http.HandleFunc("/view", viewRecordForError)
+	http.HandleFunc("/view", viewRecordForError)
 }
 
 func viewRecordForError(w http.ResponseWriter, r *http.Request) {
