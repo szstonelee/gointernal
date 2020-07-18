@@ -141,23 +141,22 @@ Otherwise, it is not nil, even the _concrete_val may be nil.
 
 For assignment of interface, there are three modes:
 
-## Mode 1: i = oB
+## Mode 1: i = ob
 
 where ob is not interface, it means
 ```
-_ptr_to_type = type of ob // remember Golang is strictly typed
+_ptr_to_type = type of ob // remember Golang is strictly typed, so type exists
 _concrete_val = ob  // So when ob is nil, it is OK
 ```
 
 ## Mode 2: i = iOther
 
-wheren iOther is another interfae, it means
+where iOther is another interfae, it means
 ```
 i._ptr_to_type = iother._ptr_to_type
 i._concrete_val = iother._concrete_val
 ```
 ## Mode 3: i = nil
-
 ```
 _ptr_to_type = nullptr
 _concrete_val = nil
