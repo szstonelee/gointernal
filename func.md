@@ -150,15 +150,15 @@ func viewRecordForError(w http.ResponseWriter, r *http.Request) {
 func viewRecordForGood(w http.ResponseWriter, r *http.Request) error {
 	c := appengine.NewContext(r)
 	key := datastore.NewKey(c, "Record", r.FormValue("id"), 0, nil)
-  record := new(Record)
+	record := new(Record)
 
-  if err := datastore.Get(c, key, record); err != nil {
-    return err
-  }
+	if err := datastore.Get(c, key, record); err != nil {
+		return err
+	}
 
-  if err := viewTemplate.Execute(w, record); err != nil {
-    return err
-  }
+	if err := viewTemplate.Execute(w, record); err != nil {
+		return err
+	}
 
 	DoOtherThingsWhenErrorJustReturn()
 
