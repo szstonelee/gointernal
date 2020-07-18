@@ -73,3 +73,83 @@ closure sample 111 I am a string!!!
 argument print 111 [222 333 444 555]
 f2 print one more line....
 ```
+
+# Conclusion
+
+## closure
+
+```
+	f1 := func(ar1 int, ar2 []int) (string, error) {
+		fmt.Println("closure sample", a, b) // closure, can use varirable out of func scope
+```
+
+like C++ & Java Lambda Function. But like Python clousure, no need to declaration. Easy to use.
+
+So I think it is passed by referenc.
+
+## Same signature, but different type
+
+f1 and f2 have the same signature, but they are different type.
+
+f1 type: func(int, []int) (string, error)
+
+f2 type: main.myFunc
+
+It is important for Interface.
+
+## Type converstion is legal when signatures are same
+
+```
+fmt.Printf("f1 type = %T, %T\n", f1, myFunc(f1))	// which print main.myFunc
+// f3 := myFunc2(f2)    // illegal
+```
+
+## assignment is legal for same signature, but type does not change
+
+```
+f1 = f2
+if _, ok := any.(myFunc); ok {
+	...
+} else {
+	fmt.Println("f1 assign from f2, f1 is not myFunc though f2 is myFunc")
+}
+```
+
+# One Usage
+
+[Error handling and Go](https://blog.golang.org/error-handling-and-go)
+
+http.Handle()
+
+I have different idea about the http.HandleFunc in the 'Error Handling and Go', code could look like this
+
+```
+func init() {
+    http.HandleFunc("/view", viewRecordForError)
+}
+
+func viewRecordForError(w http.ResponseWriter, r *http.Request) {
+	if err := viewRecordForGood(w, r); err != nil {
+		http.Error(w, err.Error(), 500)
+	}
+}
+
+func viewRecordForGood(w http.ResponseWriter, r *http.Request) error {
+	c := appengine.NewContext(r)
+	key := datastore.NewKey(c, "Record", r.FormValue("id"), 0, nil)
+  record := new(Record)
+
+  if err := datastore.Get(c, key, record); err != nil {
+        return err
+  }
+	
+  if err := viewTemplate.Execute(w, record); err != nil {
+        return err
+  }
+
+	DoOtherThingsWhenErrorJustReturn()
+
+	return nil
+}
+```
+

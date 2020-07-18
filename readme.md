@@ -5,3 +5,6 @@
 
 # Golang nil
 [Details are here](nil.md)
+
+# Golang function
+[Details are here](func.md)
