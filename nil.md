@@ -24,11 +24,11 @@ frm.Println(b == nil)  // illegal
 
 A slice variable has three items (fields), 
 
-1. _ptr, a internal ptr, point to the backed array 
-2. _len, internal length, int, 
-3. _cap, internal capacity, int
+1. _ptr, internal pointer, point to the backed array 
+2. _len, internal length, int size
+3. _cap, internal capacity, int size
 
-NOTE: _ptr is not a Golang pointer type which is described below.
+NOTE: _ptr is not a Golang pointer type which will be described below.
 
 When a slice is constructed, every item is zero, which means _ptr == nullptr from C++'s view
 
@@ -50,10 +50,23 @@ For []int{}, the backed array is allocated, though the memory size of the array 
 
 At this time, the internal _ptr is not nullptr, it has the memory address to the zero-sized array. 
 
-You can treat it like the C code
+You can treat it like the C++ code
 ```
-_ptr = malloc(0)
-assert(_ptr != NULL)
+_ptr = nullptr;   // when constructed
+
+// when assign {}
+int* buf = new int[0];
+_ptr = buf;
+assert(_ptr != nullptr);
+```
+
+Or From Java's view, it looks like
+```
+_ptr = null;  // when constructed
+
+// when assign {}
+_ptr = new Int[0];
+assert _ptr != null;
 ```
 
 ## slice index out of bound
@@ -71,9 +84,9 @@ fmt.Println(a[0]) // will panic with index out of range
 
 Example 1 and 2 incur the same panic, but actually it is a little different.
 
-The first is: if _ptr == 0, so panic
+The first is: because _ptr == 0, so panic
 
-The second is: if _ptr->size() == 0, so panic
+The second is: because_ptr->size() == 0, so panic
 
 # map with nil
 
@@ -89,7 +102,7 @@ fmt.Println(a == nil) // will print false
 
 You can imagine there is _ptr in map. 
 
-_ptr is like C's pointer, similiar to slice.
+_ptr is like C++'s pointer, similiar to slice.
 
 The _ptr points to an allocated memory which is the real hash map data structure.
 
@@ -101,7 +114,7 @@ When assigned an empty hash map, the _ptr is not zero. It is the memory address 
 
 We can treat pointer in Golang similar to slice and map.
 
-It means there is internal C's _ptr in pointer.
+It means there is internal C++'s _ptr in pointer.
 
 e.g.
 ```
