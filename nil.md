@@ -30,9 +30,9 @@ A slice variable has three items (fields),
 
 NOTE: _ptr is not a Golang pointer type which is described below.
 
-When a slice is instantialized, every item is zero, which means _ptr == nullptr from C++'s view
+When a slice is constructed, every item is zero, which means _ptr == nullptr from C++'s view
 
-If the internal _ptr is nullptr, which means the backed array does not exist, the slice is nil
+If the internal _ptr is nullptr, the slice is nil, which means the backed array does not exist. 
 
 ```
 var a []int
@@ -48,7 +48,7 @@ Why? Becuase []int is different from []int{}
 
 For []int{}, the backed array is allocated, though the memory size of the array is zero!
 
-At this time, the internal ptr is not nullptr, it has the memory address to the zero-sized array. 
+At this time, the internal _ptr is not nullptr, it has the memory address to the zero-sized array. 
 
 You can treat it like the C code
 ```
@@ -89,7 +89,7 @@ fmt.Println(a == nil) // will print false
 
 You can imagine there is _ptr in map. 
 
-_ptr is like C's pointer. 
+_ptr is like C's pointer, similiar to slice.
 
 The _ptr points to an allocated memory which is the real hash map data structure.
 
@@ -108,6 +108,7 @@ e.g.
 var p *[]int
 fmt.Println(p == nil) // will print true
 ```
+When construted, _ptr is nullptr. So if _ptr == nullptr, the pointer is nil.
 
 ```
 var a []int // a is nil
@@ -115,6 +116,8 @@ p = &a
 fmt.Println(p == nil) // will print false
 ```
 because a has been constructed, & opertator will assign the address of a to _ptr
+
+Than means assert(_ptr != nullptr)
 
 ```
 fmt.Println(*p == nil) // will print true
