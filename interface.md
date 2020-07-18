@@ -159,7 +159,7 @@ If h does not hold the copy of real value with the type struct of someThing,
 
 it can not assert sucessuflly for the interface cooler.
 
-### assginment to interface with concrete value or another interface
+### Assginment to interface with concrete value or another interface
 
 ```
 some := someThing{name: "Stone:}
@@ -219,7 +219,7 @@ func main() {
 }
 ```
 
-### Type assertion with interface, 
+### Type assertion with interface
 
 e.g. v := i.(Type) when Type is interface
 
@@ -229,7 +229,7 @@ If Type is an interface, Golang tries to match the total methods in Type, which 
 
 If all matched, it returns the concrete value without panic, i.e. a new copy to v.
 
-### interface assignment with interface
+### Interface assignment with interface
 
 Although h, variable of heater interface, can asssert type of cooler interface,
 
@@ -239,7 +239,7 @@ But you can assgin c to empty interface, it passes the compilation.
 
 Golang compilation just check validation in this senario by checking the latter interface include the method of the prev one.
 
-### implict assignment
+### Be careful of implict assignment
 
 When it runs with function parameter or return result, the interface assignment is implicit.
 
@@ -274,10 +274,118 @@ There are more info about implicit for interface, check [Golang nil](nil.md)
 
 check pointer_interface.go
 
-### other build-in type
+### Other build-in type
 
 other build-in types like stirng, slice, map, numerics, bool, byte are same as struct.
 
-### interface with nil
+### Interface with nil
 
 [check here](nil.md)
+
+### interface comparison
+
+```
+package main
+
+import "fmt"
+
+type myStruct struct {
+	id int
+}
+
+type myStruct2 struct {
+	id int
+}
+
+type myInterface interface {
+	method()
+}
+
+func (myStruct) method() {}
+
+func main() {
+	var a myStruct = myStruct{id: 1}
+	var b myStruct = myStruct{id: 2}
+	var c myStruct = myStruct{id: 1}
+	var d myStruct2 = myStruct2{id: 1}
+
+	if a == b {
+		fmt.Println("a == b")
+	} else {
+		fmt.Println("a != c")
+	}
+
+	if a == c {
+		fmt.Println("a == c")
+	}
+
+	// if a == d {	// compile failed
+
+	var ia myInterface = a
+	var ib myInterface = b
+	var ic myInterface = c
+
+	if ia == ib {
+		fmt.Println("ia == ib")
+	} else {
+		fmt.Println("ia != ib")
+	}
+
+	if ia == ic {
+		fmt.Println("ia == ic")
+	}
+
+	if ia == c {
+		fmt.Println("ia == c")
+	}
+
+	// if i1 == d {	// compile failed
+	fmt.Println("d = ", d)
+
+	var any interface{} = myStruct{id: 1}
+	if any == ia {
+		fmt.Println("empty interface comparison with another interface")
+	}
+	if any == a {
+		fmt.Println("empty interface comparison with another struct, case 1, equal")
+	}
+	if any == d {
+		fmt.Println("empty interface comparison with another struct, case 2, equal")
+	} else {
+		fmt.Println("empty interface comparison with another struct, case 2, not equal")
+	}
+}
+```
+
+Run result 
+```
+a != c
+a == c
+ia != ib
+ia == ic
+ia == c
+d =  {1}
+empty interface comparison with another interface
+empty interface comparison with another struct, case 1, equal
+empty interface comparison with another struct, case 2, not equal
+```
+
+Interface comparison with another interface or concrete value, 
+
+it will return true by two condition is matched
+
+1. value type same
+2. concrete value same (though different memory address)
+
+But note, can not compare interface with func concrete 
+
+the following code will panic at run time
+
+```
+	var i1 interface{} = func(int) {}
+	var i2 interface{} = func(int) {}
+
+	if i1 == i2 {
+		fmt.Println("i1 == i2")
+	}
+```

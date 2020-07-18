@@ -54,6 +54,9 @@ func main() {
 		fmt.Println("call f1() which is assigned from f2")
 		f1(111, []int{333, 444, 555, 666})
 	}
+
+	// if f1 == f2 {	// illegal, type not match though signature is same
+	// if any == f1 // illegal, interface can not be compared with func
 }
 ```
 
@@ -139,7 +142,7 @@ if _, ok := any.(myFunc); ok {
 }
 ```
 
-# One Usage
+# Usage 1: func for interface in http
 
 [Error handling and Go](https://blog.golang.org/error-handling-and-go)
 
@@ -180,3 +183,96 @@ func viewRecordWithoutError(w http.ResponseWriter, r *http.Request) error {
 }
 ```
 
+# Usage 2: func for dealing with error
+
+[From the blog](https://blog.golang.org/errors-are-values)
+
+## Problem: do not like so many if err != ni {}
+
+If you do not like the error return, like the following code
+
+```
+_, err = fd.Write(p0[a:b])
+if err != nil {
+    return err
+}
+_, err = fd.Write(p1[c:d])
+if err != nil {
+    return err
+}
+_, err = fd.Write(p2[e:f])
+if err != nil {
+    return err
+}
+// and so on
+```
+
+## Solution 1: wrap with a func and a variable err
+
+You can wrap it with a func
+```
+var err error
+write := func(buf []byte) {
+    if err != nil {
+        return
+    }
+    _, err = w.Write(buf)
+}
+```
+
+Then, the code will look like this
+```
+write(p0[a:b])
+write(p1[c:d])
+write(p2[e:f])
+// and so on
+if err != nil {
+    return err
+}
+```
+
+## Solution 2, wrap more, the err varble to struct and use interface
+
+Even more, you can wrap the err variable to a struct, then make the struct implement an interface method
+
+like this
+```
+type errWriter struct {
+    w   io.Writer
+    err error
+}
+
+func (ew *errWriter) write(buf []byte) {
+    if ew.err != nil {
+        return
+    }
+    _, ew.err = ew.w.Write(buf)
+}
+```
+
+Then the code looks like this
+```
+ew := &errWriter{w: fd}
+ew.write(p0[a:b])
+ew.write(p1[c:d])
+ew.write(p2[e:f])
+// and so on
+if ew.err != nil {
+    return ew.err
+}
+```
+
+## Comparison
+
+```
+	// if f1 == f2 {	// illegal, type not match though signature is same
+	// if any == f1 // illegal, interface can not be compared with func
+```
+
+Note: function object can only compare to nil
+```
+	var f1 func(int) = func(int) {}
+	var f2 func(int) = func(int) { fmt.Println("run some code") }
+
+	// fmt.Println(f1 == f2)	// illegal
+```
