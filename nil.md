@@ -30,11 +30,11 @@ A slice variable has three items (fields),
 
 NOTE: _ptr is not a Golang pointer type. Golang pointer will be described below.
 
-## When slice is nil
+## When slice is nil?
 
 When a slice is constructed (but no assignment occur or not assigned with nil), 
 
-every item is zero, which means _ptr == nullptr from C++'s view.
+each item is zero, i.e _ptr == nullptr from C++'s view.
 
 If the internal _ptr is nullptr, the slice is nil, which means the backed array does not exist. 
 
@@ -57,23 +57,23 @@ At this time, the internal _ptr is not nullptr, it has the memory address to the
 
 ## Think it as C++ or Java code
 
-You can treat the above like the C++ code
+You can imagine the above logic like the C++ code
 ```
-_ptr = nullptr;   // when constructed
+_ptr = nullptr;   // when constructed, it is nil
 
 // when assigned with {}
 int* buf = new int[0];
 _ptr = buf;
-assert(_ptr != nullptr);
+assert(_ptr != nullptr);  // not nil
 ```
 
 Or from Java's view, it looks like
 ```
-_ptr = null;  // when constructed
+_ptr = null;  // when constructed, it is nil
 
 // when assigned with {}
 _ptr = new Int[0];
-assert _ptr != null;
+assert _ptr != null;  // not nil
 ```
 
 ## slice index out of bound
@@ -199,6 +199,10 @@ func (t *tree) Sum() int {
   return t.l.Sum() + t.r.Sum()
 }
 ```
+
+## More about pointer
+
+[check here](pointer.md)
 
 # interface with nil
 

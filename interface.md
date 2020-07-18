@@ -31,7 +31,7 @@ func main() {
 
 Please reference [Go Data Structures: Interfaces](https://research.swtch.com/interfaces) first
 
-## real code to show how it runs
+## Code to show how it runs
 ```
 package main
 
@@ -92,7 +92,7 @@ func main() {
 }
 ```
 
-## Run Result
+## Run Results
 
 go run main.go 
 
@@ -122,9 +122,9 @@ You can imagine the references similar to Java reference or C++ smart pointer.
 
 #### dynamic itable
 
-The first reference is the dynamic itable which is built dynamiclly, i.e. in runtime.
+The first reference is the dynamic itable which is built dynamically, i.e. in runtime.
 
-You can imagine itable similar to Java Interface or C++ vtable, but Java and C++ implement it staticlly, i.e. in compile time.
+You can imagine itable similar to Java Interface or C++ vtable, but Java and C++ implement it statically, i.e. in compile time.
 
 Itable will be built first time with assignment, then be cached. 
 
@@ -277,3 +277,7 @@ check pointer_interface.go
 ### other build-in type
 
 other build-in types like stirng, slice, map, numerics, bool, byte are same as struct.
+
+### interface with nil
+
+[check here](nil.md)

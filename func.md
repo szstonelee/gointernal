@@ -113,7 +113,7 @@ It is important for interface implementation.
 ### legal when signatures are same
 
 ```
-fmt.Printf("f1 type = %T, %T\n", f1, myFunc(f1))	// which print main.myFunc
+fmt.Printf("f1 type = %T, %T\n", f1, myFunc(f1))	// will print main.myFunc
 ```
 
 ### illegal when signatures are not same, signature includes return
@@ -151,16 +151,17 @@ Code could look like this
 
 ```
 func init() {
-	http.HandleFunc("/view", viewRecordForError)
+	http.HandleFunc("/view", viewRecordForAll)
 }
 
-func viewRecordForError(w http.ResponseWriter, r *http.Request) {
-	if err := viewRecordForGood(w, r); err != nil {
+func viewRecordForAll(w http.ResponseWriter, r *http.Request) {
+	if err := viewRecordWithoutError(w, r); err != nil {
+		// deal with error in one place
 		http.Error(w, err.Error(), 500)
 	}
 }
 
-func viewRecordForGood(w http.ResponseWriter, r *http.Request) error {
+func viewRecordWithoutError(w http.ResponseWriter, r *http.Request) error {
 	c := appengine.NewContext(r)
 	key := datastore.NewKey(c, "Record", r.FormValue("id"), 0, nil)
 	record := new(Record)

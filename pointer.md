@@ -65,3 +65,6 @@ int* p3 = p2
 *p3 = <new val>
 a will be the <new val>
 ```
+# pointer with nil
+
+[Check here](nil.md)
