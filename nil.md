@@ -119,9 +119,15 @@ When assigned an empty hash map, i.e. {}, the _ptr is not zero. It is the memory
 
 # pointer with nil
 
+## pointer internal
+
 We can treat pointer in Golang similar to slice and map.
 
-It means there is an internal _ptr in pointer.
+It means there is an internal _ptr in pointer. 
+
+(pointer has another item which is type, but I am not sure whether the type item is in compile time or run time)
+
+## when pointer is nil or not nil
 
 e.g.
 ```
@@ -139,10 +145,60 @@ because a has been constructed (but right now a is nil), the & opertator will as
 
 It means: _ptr != nullptr
 
+## deference pointer, i.e. *p
+
 ```
 fmt.Println(*p == nil) // will print true
 ```
 because  *p == nil equals to a == nil
+
+But note, deference of nil pointer, will trigger panic
+```
+var p *int
+p = nil
+*p  // will panic
+```
+
+## use pointer as nil
+
+```
+type tree struct {
+  v int
+  l *tree
+  r *tree
+}
+
+func (t *tree) Sum() int {
+  sum := t.v
+
+  if t.l != nil {
+    sum += t.l.Sum()
+  }
+
+  if t.r != nil {
+    sum += t.r.Sum()
+  }
+
+  return sum
+}
+```
+
+but if we call Sum like 
+```
+var t *tree // t now is nil
+t.Sum() // will panic, for the code: sum := t.v in Sum()
+```
+
+We can change to the following, which is more robust
+```
+func (t *tree) Sum() int {
+  if t == nil {
+    return 0
+  }
+
+  return t.l.Sum() + t.r.Sum()
+}
+```
 
 # interface with nil
 
