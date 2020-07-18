@@ -20,6 +20,8 @@ frm.Println(b == nil)  // illegal
 
 # slice with nil
 
+## slice internal
+
 A slice variable has three items (fields), 
 
 1. _ptr, a internal ptr, point to the backed array 
@@ -53,6 +55,8 @@ You can treat it like the C code
 _ptr = malloc(0)
 assert(_ptr != NULL)
 ```
+
+## slice index out of bound
 
 e.g. 1
 ```
@@ -91,7 +95,7 @@ The _ptr points to an allocated memory which is the real hash map data structure
 
 When constructed but not assigned any value, _prt == nullptr, i.e. zero
 
-When assigned an empty hash map, the _ptr is not zero. It has the memory address of the empty hash map.
+When assigned an empty hash map, the _ptr is not zero. It is the memory address of the empty hash map.
 
 # pointer with nil
 
@@ -101,16 +105,21 @@ It means there is internal C's _ptr in pointer.
 
 e.g.
 ```
-var a []int // a is nil
-
 var p *[]int
 fmt.Println(p == nil) // will print true
+```
 
+```
+var a []int // a is nil
 p = &a
 fmt.Println(p == nil) // will print false
-
-fmt.Println(*p == nil) // will print true, *p == nil equal to a == nil
 ```
+because a has been constructed, & opertator will assign the address of a to _ptr
+
+```
+fmt.Println(*p == nil) // will print true
+```
+because  *p == nil equals to a == nil
 
 # interface with nil
 

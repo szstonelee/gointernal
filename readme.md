@@ -3,5 +3,5 @@
 
 [Details are here](interface.md)
 
-# Golang Nil
+# Golang nil
 [Details are here](nil.md)
