@@ -20,7 +20,7 @@ frm.Println(b == nil)  // illegal
 
 # slice with nil
 
-## slice internal
+## slice internal items
 
 A slice variable has three items (fields), 
 
@@ -97,7 +97,7 @@ The second one is like: because_ptr->size() == 0, so panic
 
 # map with nil
 
-Map is similiar to slice. Check the following code
+Map is similar to slice. 
 
 ```
 var a map[int]string
@@ -115,7 +115,7 @@ The _ptr points to an allocated memory which is the real (or backed) hash map da
 
 When constructed but not assigned any value, _prt == nullptr, i.e. zero
 
-When assigned an empty hash map of {}, the _ptr is not zero. It is the memory address of the backed empty hash map.
+When assigned an empty hash map, i.e. {}, the _ptr is not zero. It is the memory address of the backed empty hash map.
 
 # pointer with nil
 
@@ -175,8 +175,8 @@ _concrete_val = ob  // So when ob is nil, it is OK
 
 where iOther is another interfae, it means
 ```
-i._ptr_to_type = iother._ptr_to_type
-i._concrete_val = iother._concrete_val
+i._ptr_to_type = iOther._ptr_to_type
+i._concrete_val = iOther._concrete_val
 ```
 ## Assignment mode 3: i = nil
 ```
@@ -209,4 +209,120 @@ _concrete_val = nil
 	fmt.Println(any == nil) // will print true
 ```
 
+# implict assignment for interface and nil
 
+In the above text, the assginments to interface has three modes.
+
+But it is trivial that there are implicit assignment for interface in two situations
+
+## implicit as function parameter
+
+```
+var a []int
+
+func f(i interface{}) {
+
+}
+
+f(a)  // will assign a to i, so there is a conversion to interface
+```
+
+## as return from func
+
+```
+type myStruct struct {}
+
+func (myStruct) Error() string {return "error msg"}
+
+func f() error {
+  a := myStruct{}
+  DoSomething()
+  return a  // will assign a to error interface, return conversion occur
+}
+```
+
+## when is nil not nil (If implicit conversion for interface occur)
+
+[From the prerequisit video](https://www.youtube.com/watch?v=ynoY2xz-F8s)
+
+```
+func do() error {
+  var err *doError
+  return err
+}
+
+func main() {
+  err := do()
+  fmt.Println(err == nil) // will print false
+}
+```
+
+Why? Because err in do() is a pointer. After return, it is converted to an interface of error.
+
+So in main(), the err interface's _ptr_to_type is not nullptr though the concrete value _concrete_val is nil.
+
+## nil is not nil (If no interface occur)
+
+[From the prerequisit video](https://www.youtube.com/watch?v=ynoY2xz-F8s)
+
+```
+func do() *doError {
+  return nil
+}
+
+func main() {
+  err := do()
+  fmt.Println(err == nil) // will print true
+}
+```
+
+Why? Because there are no interfce. 
+
+The err in main() is not an interface, it is a pointer!
+
+## if combined the above two
+
+[From the prerequisit video](https://www.youtube.com/watch?v=ynoY2xz-F8s)
+
+```
+func do() *doError {
+  return nil
+}
+
+func wrapDo() error {
+  return do()
+}
+
+func main() {
+  err := wrapDo()
+  fmt.Println(err == nil) // will print false
+}
+```
+
+Why? Because err in main() is interface now!! 
+
+Even do() return a pointer. But wrapDo() change that.
+
+## Do not return nil concrete vulue as nil error
+
+From the above examples, we know the following code is not recommended
+
+```
+func returnError() error {
+  var p *MyError = nil
+  if bad() {
+    p = getBad()
+  }
+  return p
+}
+```
+
+We need to deal with error like this 
+```
+func return Error() error {
+  if bad() {
+    return getBad()
+  }
+  return nil
+}
+```
