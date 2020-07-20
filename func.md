@@ -272,7 +272,37 @@ if ew.err != nil {
 Note: function object can only compare to nil
 ```
 	var f1 func(int) = func(int) {}
-	var f2 func(int) = func(int) { fmt.Println("run some code") }
+	var f2 func(int) = func(int) {}
 
 	// fmt.Println(f1 == f2)	// illegal
 ```
+
+## Function as receiver
+
+Usually we use struct or pointer (which usually points to a struct) as a receiver.
+
+We can use function type as a receiver too.
+
+```
+package main
+
+import "fmt"
+
+type myFunc func(string) string
+
+type myInterface interface{ method() }
+
+func (f myFunc) method() {
+	fmt.Println("inteface mehtod() be called!")
+}
+
+func main() {
+	var f myFunc = func(a string) string { return a + ":suffix" }
+	a := f("abc")
+	fmt.Println(a)
+	var b myInterface = f
+	b.method()
+}
+```
+
+NOTE: interface can not be a receiver.

@@ -229,6 +229,18 @@ If Type is an interface, Golang tries to match the total methods in Type, which 
 
 If all matched, it returns the concrete value without panic, i.e. a new copy to v.
 
+A trick for anonymous interface
+
+```
+v, ok := x.(interface{ F() (int, error) })
+if ok {
+	v.F()	// no panic
+}
+```
+Anonymous interface is better than named interface when named interface is from other package.
+
+Because other package could changed the signature, we can use anonymous interface for the decouple.
+
 ### Interface assignment with interface
 
 Although h, variable of heater interface, can asssert type of cooler interface,
