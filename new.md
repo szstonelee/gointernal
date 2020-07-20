@@ -1,6 +1,6 @@
-# Golang construction of object
+# Golang construction and initiation of object
 
-In other language, like C++, you need the `new` operator to construct object in heap (if not optimized by compilor), 
+In other language, like C++, you need the `new` operator to construct object in heap (if not optimized by compiler), 
 
 or no new to construct the object in stack. 
 
@@ -9,21 +9,20 @@ or no new to construct the object in stack.
 class MyClass {
 public:
   MyClass(int v) : val_(v) {}
-
 private:
   int val_;
 }
 
-void func() {
+void foo() {
   MyClass* p = new MyClass(100); // in heap
 
   MyClass a(200);  // in stack, after exit func(), a will be deleted
 
-  delete p;
+  delete p; // if no delete, memory will leak
 }
 ```
 
-In Java, every object (not primitives) is allocated in heap by new (Except the compile optimization for escape)
+In Java, every object (no primitives like int, bool) is allocated in heap by new (if not optimized by compiler for escape analyzation)
 
 Otherwise, the reference to the object in Java is null.
 
@@ -93,12 +92,14 @@ var p5 *string
 fmt.Println(*p5)  // will panic
 
 var p6 *string = new(string)
-fmt.Println(*p6)  // will panic
+fmt.Println(*p6)  // will not panic
 ```
 
 ## make() is for the underlying initialization for map, slice and channel
 
 Because map, slice and channel has two layers. 
+
+Check [slice internal](https://blog.golang.org/slices-intro)
 
 The top layer is a data structure for abstraction or logic description.
 
@@ -106,7 +107,7 @@ The underlying layer is the real data structure for the type. For slice, it is a
 
 When map, slice, channel is constructed, it only has the top layer, but no underlying layer.
 
-After initialization, like make() does or with literal assinment, the underlying layer is constructed.
+After initialization, like make() does or with literal assignment, the underlying layer is constructed.
 
 ```
 var a []myStruct = make(myStruct, 5, 10)      // length = 5, capcaity = 10
@@ -116,7 +117,7 @@ var b []int
 fmt.Println(b == nil)  
 
 var c []int = []int{} // it equals to c := []int{} which is idiomatic
-// will print false, which equals to var c []int = make([int, 0, 0])
+// will print false, which equals to c := make([[]int, 0, 0]) which is idiomatic
 fmt.Println(c == nil) 
 ```
 
