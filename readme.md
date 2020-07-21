@@ -15,3 +15,6 @@
 
 # Golang type conversion
 [Details are here](typeConversion.md)
+
+# Error in error
+[Details are here](errInErr.md)

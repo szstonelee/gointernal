@@ -65,3 +65,32 @@ func main() {
 # interface conversion
 
 interface convsion is a big topic, [check here](interface.md)
+
+# explicit type different, but internal type same
+
+```
+package main
+
+import "fmt"
+
+func main() {
+	type myString string
+
+	a := "abc" // a is string type
+
+	var b myString
+
+	// b = a	// illegal
+	b = myString(a)
+
+	fmt.Println(b) // will print "abc"
+
+	fmt.Printf("type of a = %T, type of b = %T\n", a, b) // type is different, a is "string" while b is "main.myString"
+}
+```
+You now can know why it is different for the interface implementation.
+
+Because interface is based on type, check [inteface internal](interface.md) for more info.
+
+There is a trick. You can convert explicit type to other type which implement an interface to [invoke the method](https://golang.org/doc/effective_go.html#conversions).
+

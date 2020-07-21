@@ -16,15 +16,17 @@ private:
 void foo() {
   MyClass* p = new MyClass(100); // in heap
 
-  MyClass a(200);  // in stack, after exit func(), a will be deleted
+  MyClass a(200);  // in stack, after exit func(), a will disappear
 
   delete p; // if no delete, memory will leak
 }
 ```
 
-In Java, every object (no primitives like int, bool) is allocated in heap by new (if not optimized by compiler for escape analyzation)
+In Java, every object (no primitives like int, bool, long) is allocated in heap by new (if not optimized by compiler for escape analyzation)
 
-Otherwise, the reference to the object in Java is null.
+Otherwise, the reference to the object in Java is null which means there is no object.
+
+NOTE: You can treat Java Clone(), ClassLoader, Reflection, auto box, assingnment of String literal as a special construction way.
 
 In Golang, it is a little different.
 
@@ -47,11 +49,12 @@ var a *myStruct = new(myStruct)
 var b myStruct
 ```
 
-## literal
+## literal assignment
 
 ```
 c := myStruct{} // equivalent to var c myStruct
 ```
+NOTE: var c []int is not equivalent to c := []int{}, see the following section of make()
 
 The difference is that new returns pointer while var and literal return no pointer. You can do
 
