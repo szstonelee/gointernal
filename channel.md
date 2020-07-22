@@ -154,3 +154,96 @@ Do not communicate by sharing memory; instead, share memory by communicating.
 ```
 
 [Python asyncio framework has the similar idea.](https://realpython.com/async-io-python/)
+
+# The number of goroutine is not the number of go exec
+
+Do not forget, the main() is also a routine
+
+```
+package main
+
+import "fmt"
+
+func main() {
+	ch := make(chan int, 2)
+	ch <- 1
+	ch <- 2
+	ch <- 3
+	fmt.Println(<-ch)
+	fmt.Println(<-ch)
+}
+```
+
+It will output: all goroutines are asleep - deadlock!
+
+When the ch <-3 execute, the main() is a goroutine which is in the channel ch recevier queue.
+
+# example for select
+[From the Go tour about select](https://tour.golang.org/concurrency/5)
+```
+package main
+
+import (
+	"fmt"
+	"time"
+)
+
+func fibonacci(c, quit chan int) {
+	x, y := 0, 1
+	for {
+		select {
+		case c <- x:
+			x, y = y, x+y
+		case <-quit:
+			fmt.Println("quit")
+			return
+		}
+	}
+}
+
+func main() {
+	c := make(chan int)
+	quit := make(chan int)
+	go func() {
+		for i := 0; i < 10; i++ {
+			fmt.Println(<-c)
+			time.Sleep(time.Second * 1)
+		}
+		fmt.Println("exit from here")
+	}()
+	go func() {
+		time.Sleep(time.Second * 7)   // if more than 9 seconds, will print "exit from here", otherwise no error, try it!!!
+		quit <- 1
+	}()
+	fibonacci(c, quit)
+	time.Sleep(time.Second * 3)
+}
+```
+
+You can use the above info to analyze the code, it is fun.
+
+# use goroutine for parallelism
+
+Goroutine with channel can be use the parallel execution of multi cpu core. The following is an example.
+
+Check sameBST.go, which is origiated from [A tour of go: Excercise: Equivalent Binary Tree](https://tour.golang.org/concurrency/8)
+
+```
+go run sameBST.go
+```
+
+It uses two channel and two go routine for parallelism.
+
+Note: we use buffer channel for speed. You can try no buffered channel.
+
+Check sameBST.cc, which is similar to sameBST.go but can only use one core
+```
+g++ -std=c++17 sameBST.cc
+./a.out
+```
+
+From the test results, you can see:
+
+1. The time taken for building tree, which internally is related to memory allocation, are similar for Go and c++. Go is a little faster for its pre-allocated memory strategy.
+
+2. The time taken for computing same(), which internally is a traverse of whole tree, is different. Go is around half of C++. That is the effect of parallelism where Go's goroutine with channecl can achieve. 
