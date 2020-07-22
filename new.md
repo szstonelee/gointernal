@@ -56,7 +56,7 @@ c := myStruct{} // equivalent to var c myStruct
 ```
 NOTE: var c []int is not equivalent to c := []int{}, see the following section of make()
 
-The difference is that new returns pointer while var and literal return no pointer. You can do
+The difference is that *new* returns pointer while *var* and *literal* return no pointer. You can do
 
 ```
 func init() *myStruct {
@@ -68,6 +68,7 @@ func init() *myStruct {
 ```
 
 the same as 
+
 ```
 func init() *myStruct {
   return &myStruct{name: "Stone", value: 100}
@@ -102,7 +103,9 @@ fmt.Println(*p6)  // will not panic
 
 Because map, slice and channel has two layers. 
 
-Check [slice internal](https://blog.golang.org/slices-intro)
+Check 
+1. [slice internal](https://blog.golang.org/slices-intro)
+2. [chanel internal](channel.mid)
 
 The top layer is a data structure for abstraction or logic description.
 

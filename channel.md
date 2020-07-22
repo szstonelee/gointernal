@@ -1,34 +1,34 @@
 # channel
 
-Golang channel is like slice and map. There are two layers data structure for them. [Check slice and map for two layers](nil.md) 
+Golang channel is like slice and map. There are two layers data structure for them. 
 
-But channel has more states and more member fields.
+[Check slice and map for two layers](new.md) and [nil help](nil.md) 
+
+But channel has more states and more member fields. So channel is more complicated.
 
 ## Analog to Java
 
 Golang channel is something analogous to Java Executor Framework. 
 
-In the Java concurency framework, there are three components:
+In the Java concurrency framework, there are three components:
 
-1. the blocking queue, which has the task elements and has mutex to secure the concurrentcy
+1. the blocking queue, which has the task elements and has mutex to secure the concurrency
 2. the producer, which enque one task into the blocking queue, usually one producer run in one thread
 3. the consumer, which deque one task from the blocking queue, usually one consumer run in one thread
 
-If the blocking queue is full, the producer, which is run in one thread, will blcok, i.e. force to sleep by kernel. 
+If the blocking queue is full, the producer, which is run in one thread, will blcok, i.e. be forced to sleep (or wait) by kernel. 
 
 If nothing in the blocking queue, the consumer, will block.
 
-When some producers are blocked, they are queued by kernel as a kernel thread waiting queue for one mutex.
+When some producers are blocked, they are queued by kernel as a kernel queue of waiting threads for one mutex.
 
 The same idea applies to blocked consuemers.
 
-After the bloking queue changes from being full to having room, the framework wakes up one producer. Internally, it is an thread waken up by the kernel.
+After the bloking queue changes from being full to having room, the framework wakes up one producer. Internally, it is an thread waken up by the kernel. So the producer can enque() its task to the blocking queue.
 
-Sleeping consumers work the same way.
+Java Exectutor Framework uses the kernel primitives like mutex to work the way described above. It has the overhead for the context switch from kernel space to user space. You can think one switch is around micro second.
 
-Java Exectutor Framework use the kernal primitives like mutex to work the way described above. It has the overhead for the context switch from kernal space to user space.
-
-Goang channel basically work in the user space, so it has much less overload. 
+Goang channel basically work in the user space, so it has much less cost. You can thinke if working always in the user space, the cost is about nano seconds (a couple, tens, hundreds? I do not know, but it is cheaper than micro second). 
 
 It works like what the kernel does, so channel has the similar data structure as Java Execturor Framework.
 
@@ -36,11 +36,11 @@ It works like what the kernel does, so channel has the similar data structure as
 
 The Golang channel has an internal array like the blocking queue. Actually the interanl array is working as ring queue. If senders send something, the task stuff will be queued in the internal array.
 
-Note, the internal array size can be zero. It means when a sender invokes enque(), it will block until a receiver invokes deque(). Or it will succeed at once as there has been a receiver called deque() before the enque(). 
+Note, the internal array size can be zero. It means when a sender invokes enque(), it will block until a receiver invokes deque(). Or it will succeed at once if there has been a receiver called deque() before the enque(). 
 
 ## similar kernel thread queue
 
-Like producer and consumer thread queue in kernel, Golang channel has two queues, one for the sender, the other for the receiver. Each sender and receiver is like a thread. If sender/receiver is blocked, it will be queued in the channel sender/reeiver queue.
+Like producer and consumer thread queues in kernel, Golang channel has two queues, one for the sender, the other for the receiver. If sender/receiver is blocked, it will be queued in the channel sender/reeiver queue.
 
 ## chanel state
 
@@ -73,8 +73,9 @@ func main() {
 
 	ch <- 5
 
-	fmt.Println("can not print anything for deadlock")	// will deadlock
+	fmt.Println("can not print anything because ch <- 5 blocks.")	// will deadlock
 }
+```
 
 ### close
 
@@ -86,9 +87,11 @@ At first, the channel's close state is false. After the sender call close(), it 
 
 When the channel state close == true, sender can not enque(). Otherwise, it will panic.
 
-Whether close is true or false, receiver can always deque()
+Whenever close is true or false, receiver can always deque().
 
-if close == true and no element in the interan array, it will return an empty value to the receiver as quick as possible. NOTE: if the receiver is in range loop, it will ternimate the loop and will not go into the loop scope.
+if close == true and no element in the interan array, it will return an empty value to the receiver as quick as possible. 
+
+NOTE: if the receiver is in range loop, it will ternimate the loop and will not get into the loop scope.
 
 If you want to know the return value of a receiver is from the close state or just an empty value sent by a sender, you can test it like
 ```
@@ -106,7 +109,7 @@ package main
 import "fmt"
 
 func main() {
-	ch := make(chan int, 1) // if ch := make(chan int), it will block
+	ch := make(chan int, 1) // if ch := make(chan int), it will block and eventually deadlock
 
 	ch <- 5
 
@@ -120,7 +123,7 @@ But if you want go run like thread switch, you need goroutine
 
 In the above code, we can not make the ch as zero-size, it will deadlock,
 
-but if we do use goroutine, it will succeed
+but if we use goroutine, it will succeed
 ```
 package main
 
