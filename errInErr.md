@@ -50,7 +50,7 @@ But if something happen like:
 
 For 1, we want debug the %flag for Stderr
 
-For 2, what if the error is not related to %v and is related to the mememry which is allocated by Stderr.
+For 2, what if the error is not related to %v and is related to the memory which is allocated by Stderr.
 
 # My View
 
@@ -64,7 +64,7 @@ It is the samething for new in C++.
 
 In Java, we use exception. Java uses checked and unchecked exception fot the solution. It is a good idea. For example, if OOM, what can we do? The best way is to let the application crash and show the OOM message, which is the duty of Java runtime. So we can stop our application, do: 1. optimize our code, 2. tuning JVM, 3. add more memory to machine.
 
-But Java has something little issues with the checked exception. For the IO, Java treats them as checked exception. But IO has two kinds. One is for network, the other is for file. If it is for file, mostly, we can not go on. Even for the network, there are two sub situations. If it is LAN, the error is not tolerant. For example, if you commit a transaction for database, no response return with network error, can you retry? No!
+But Java has some little issues with the checked exception. For the IO, Java treats them as checked exception. But IO has two kinds. One is for network, the other is for file. If it is for file, mostly, we can not go on. Even for the network, there are two sub situations. If it is LAN, the error is not tolerant. For example, if you commit a transaction for database, no response return with network error, can you retry? No!
 
 In Linux, if you apply for allocation of new memory, but OS can not do it, it just kill some other application to make room for your request. Or Linux just kill you to stop the request. 
 

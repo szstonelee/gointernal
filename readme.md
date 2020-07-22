@@ -18,3 +18,6 @@
 
 # Error in error
 [Details are here](errInErr.md)
+
+# Golang channel
+[Details are here](channel.md)
