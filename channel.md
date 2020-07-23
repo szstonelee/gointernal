@@ -224,7 +224,7 @@ You can use the above info to analyze the code, it is fun.
 
 # use goroutine for parallelism
 
-Goroutine with channel can be use the parallel execution of multi cpu core. The following is an example.
+Goroutine with channel can be used for the parallel execution of multi cpu core. The following is an example.
 
 Check sameBST.go, which is origiated from [A tour of go: Excercise: Equivalent Binary Tree](https://tour.golang.org/concurrency/8)
 
@@ -234,9 +234,9 @@ go run sameBST.go
 
 It uses two channel and two go routine for parallelism.
 
-Note: we use buffer channel for speed. You can try no buffered channel.
+Note: we use buffered channel (1K) for speed. Otherwise, the most portion of time is taken by the main memory seeking. You can try no buffered channel.
 
-Check sameBST.cc, which is similar to sameBST.go but can only use one core
+Check sameBST.cc, which is similar to sameBST.go but can only use one core.
 ```
 g++ -std=c++17 sameBST.cc
 ./a.out
@@ -247,3 +247,19 @@ From the test results, you can see:
 1. The time taken for building tree, which internally is related to memory allocation, are similar for Go and c++. Go is a little faster for its pre-allocated memory strategy.
 
 2. The time taken for computing same(), which internally is a traverse of whole tree, is different. Go is around half of C++. That is the effect of parallelism where Go's goroutine with channecl can achieve. 
+
+# the goroutine time order
+
+Like thread, if you do not use sync way, the order of goroutine can not be guaranteed.
+
+[Sample is from Go webiste](https://golang.org/ref/mem)
+```
+var a string
+
+func hello() {
+	go func() { a = "hello" }()
+	print(a)
+}
+```
+
+No guarantee when a will be "hello". Even it could never happen for the opitimized compilation. (E.g. If compiler found the goroutine has never been used, it can delete go goroutine() )

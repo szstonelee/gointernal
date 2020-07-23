@@ -219,9 +219,11 @@ func main() {
 }
 ```
 
+[The reason for the difference treatment for pointer and concrete is here](https://golang.org/doc/faq#Functions_methods)
+
 ### Type assertion with interface
 
-e.g. v := i.(Type) when Type is interface
+e.g. v := i.(Type) when Type is interface type
 
 From the above, it is a matching game.
 
@@ -240,6 +242,48 @@ if ok {
 Anonymous interface is better than named interface when named interface is from other package.
 
 Because other package could changed the signature, we can use anonymous interface for the decouple.
+
+Another sample is from [Effitive Go](https://golang.org/doc/effective_go.html#interface_conversions), code with some change shows like this
+```
+package main
+
+// Stringer is an interface
+type Stringer interface {
+	String() string
+}
+
+type myStruct struct{}
+
+func (myStruct) String() string {
+	return "it is of myStruct type"
+}
+
+func f(value interface{}) string {
+	switch str := value.(type) {
+	case string:
+		// a, ok := str.(Stringer)	// invalid because str is not an interface
+		return str
+		
+	case Stringer:
+		_, ok := str.(myStruct) // right now, str is an interface!!!! and myStruct must implement String(), otherwise, compile failed
+		if ok {
+			return "also myStruct " + str.String()
+		} else {
+			return str.String()
+		}
+
+	case int:
+		return "abc"
+
+	default:
+		return "value is not string-like"
+	}
+}
+
+func main() {
+
+}
+```
 
 ### Interface assignment with interface
 

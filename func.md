@@ -101,6 +101,12 @@ f1() {
 closure sample 9 I am a string!!!
 ```
 
+Because the closure is passed by reference, it can explain the following case
+
+[What happens with closures running as goroutines?](https://golang.org/doc/faq#closures_and_goroutines)
+
+If you are not familar with goroutine and channel, [check here](channel.mid)
+
 ## Same signature, but different type
 
 f1 and f2 have the same signature, but they are different types.

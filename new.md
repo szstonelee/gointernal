@@ -129,3 +129,44 @@ fmt.Println(c == nil)
 
 check [nil](nil.md) for more details
 
+# Golang init order
+
+Each variable in a source file which is outsize of func is like a global instance in C.
+
+In C/C++, there are no guarantee for the order of the glabal instance construction. So C/C++ suggests you init and use them from class methods as static variables. [one exmaple for C++](https://stackoverflow.com/questions/3746238/c-global-initialization-order-ignores-dependencies/3746249#3746249), 
+
+[For example for Golang](https://stackoverflow.com/questions/24790175/when-is-the-init-function-run) 
+```
+package main
+
+import "fmt"
+
+var WhatIsThe = AnswerToLife()
+
+func AnswerToLife() int {
+	return 2
+}
+
+func init() {
+	WhatIsThe = 1
+}
+
+func main() {
+	if WhatIsThe == 1 {
+		fmt.Println("WhatIsThe value is from init()")
+	} else if WhatIsThe == 2 {
+		fmt.Println("WhatIsThe value is is from var, which call AnswerToLife()")
+	} else {
+		fmt.Printf("WhatIsThe is anything else, %v\n", WhatIsThe)
+	}
+}
+```
+It will print WhatIsThe value is from init().
+
+The order of var in global and init() for each source file with multi import is [the same post in StackOverflow](https://stackoverflow.com/questions/24790175/when-is-the-init-function-run)
+
+
+
+
+
+
