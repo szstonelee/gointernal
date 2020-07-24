@@ -30,7 +30,11 @@ A slice variable has three items (fields),
 2. _len, internal length, int size
 3. _cap, internal capacity, int size
 
-NOTE: _ptr is not a Golang pointer type. Golang pointer will be described below.
+NOTE: 
+1. _ptr is not a Golang pointer type. Golang pointer will be described below.
+2. For simplicity, we omit the _start field, assuming it is zero here
+
+Check [slice interal for more details](slice.md)
 
 ## When slice is nil?
 

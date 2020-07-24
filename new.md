@@ -131,7 +131,7 @@ check [nil](nil.md) for more details
 
 # Golang init order
 
-Each variable in a source file which is outsize of func is like a global instance in C.
+Each variable in a source file which is outside of function is like a global instance in C in one module.
 
 In C/C++, there are no guarantee for the order of the glabal instance construction. So C/C++ suggests you init and use them from class methods as static variables. [one exmaple for C++](https://stackoverflow.com/questions/3746238/c-global-initialization-order-ignores-dependencies/3746249#3746249), 
 

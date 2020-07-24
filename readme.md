@@ -1,3 +1,6 @@
+# Golang string
+[Details are here](string.md)
+
 # Golang slice
 [Details are here](slice.md)
 

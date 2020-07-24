@@ -66,10 +66,10 @@ a[2:9] = struct slice {
 Then 
 ```
 // Golang code
-a = a[2:9]  // means assignment(copy) the a[2:9] struct to a
+a = a[2:9]  // means assig (copy) the a[2:9] struct to a
 ```
 
-So a now looks like 
+So a now looks like after a = a[2:9]
 ```
 // in C++ code
 a = struct {
@@ -137,7 +137,7 @@ len=3 cap=6 [1 2 3]
 len=6 cap=6 [1 2 3 4 5 6]
 ```
 
-In f(), s is diffenent from a in terms of memory address. In Golang, ervery parameter is passed by copy.
+In f(), s is diffenent from a in terms of memory address. In Golang, every parameter is passed by copy.
 
 But s has the same internal value of a, i.e. s->_ptr == a->_ptr.
 
@@ -201,3 +201,10 @@ s->_ptr in f() is differnt from a->_ptr in main(), so the backed arrays are diff
 
 In example 1, the _ptr in s and a is same, i.e. the backed array does not change.
 
+# slice nil
+
+Note:
+
+var a int[] is differnt from a := []int{}
+
+[Check nil for more details](nil.md)
