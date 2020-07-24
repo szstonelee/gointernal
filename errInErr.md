@@ -98,3 +98,21 @@ If the assumptions are true, or if we code in limited error, it will make the RP
 # More interesting 
 
 frm.Println() actually call Fprintf() agian, [check here](https://golang.org/src/fmt/print.go?s=5840:5903#L202)
+
+# Error naming
+
+Error types should be of the form FooError:
+
+```
+type ExitError struct {
+    ...
+}
+```
+
+Error values should be of the form ErrFoo:
+
+```
+var ErrFormat = errors.New("image: unknown format")
+```
+
+[check naming for more details](naming.md)

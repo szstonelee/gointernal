@@ -1,7 +1,10 @@
+# Golang slice
+[Details are here](slice.md)
+
 # Golang construct
 [Details are here](new.md)
 
-# Golang interface internal
+# Golang interface
 [Details are here](interface.md)
 
 # Golang nil
@@ -21,3 +24,6 @@
 
 # Golang channel
 [Details are here](channel.md)
+
+# Golang naming
+[Details are here](naming.md)

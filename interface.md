@@ -445,3 +445,92 @@ the following code will panic at run time
 		fmt.Println("i1 == i2")
 	}
 ```
+
+# name for interface
+
+## er way
+
+As a convention, we suffix "er" to a phrase to declare it as interface. For example, Reader to read, Writer to write.
+
+If the word which is appended by "er" is a verb, it is natural. But if it is a noun or adj, it is a little wierd.
+
+That is why sometimes, we swap the noun word for the verb word in a phrase
+```
+type ByteReader interface {
+    ReadByte() (c byte, err error)
+}
+```
+
+It is simple, but some times it is not easy because some words are not easy to suffix "er". For example, 
+
+```
+Server or Info
+```
+
+or for Generate, which one is natural, Generater or Generator?
+
+I choose Generater for consistency.
+
+Sometimes, you can imagine a noun as a verb. String has a usage as verb, but in common sense, it is a noun. Stringer is a popular interface in Golang because we treat string as a verb, like Java's Object::toString(). If you treat noun as verb, it is easier to append "er".
+
+## patch way
+
+If appending-er looks not good, there are two patch ways for the naming of interface
+
+1. Prefix I
+```
+Request -> IRequest
+```
+Requester is more consistent than IRequest. But someone feel Requester sounds like a person, not an interface.
+
+I prefer Requester.
+
+2. Suffix Interface
+```
+Request -> RequestInterface
+Info -> InfoInterface
+```
+
+If 'er' suffix is not good, I will use 'Interface' suffix.
+
+## no way
+
+Sometimes, no er, no I, no Interface for interface, even in the standard library.
+
+For examp, [net/Conn](https://golang.org/pkg/net/#Conn)
+
+Otherwise, it would be Conner or Connectioner.
+
+No way is not a good way. I treat it as non-usual-way. For the legacy code or common interface like net/Conn.
+
+## fake way
+
+Sometimes, er does not mean interface.
+
+For example, in bufio package
+
+```
+type ReadWriter struct {
+	*Reader  // *bufio.Reader
+  *Writer  // *bufio.Writer	
+}
+```
+
+It makes me confused. It is very rare to use pointer to interface. Actually you can treat pointer to interface as wrong code.
+
+[But after the package](https://golang.org/pkg/bufio/#Reader), we see
+```
+type Reader struct {}
+type Writer struct {}
+```
+
+The Reader and Writer in bufio package is struct, no interface. 
+
+So the pointers in ReadWriter, which is a struct too in package bufio, make sense.
+
+But I do not feel good. It is a violation of er convention. I do not like the fake way.
+
+Sometimes, Golang prefers short to verbose to sacrifice the meaning of long phrase. I think Golang goes too far for the idea of short.
+
+It would be better if using #or# to replace #er#.
+
