@@ -9,7 +9,7 @@ The first layer is always there, if imagined in C++, it looks like
 ```
 // C++ code to imagine the slice data structure in Golang
 struct slice {
-  void* _ptr;     // which points to an backed array
+  void* _ptr;     // which points to a backed array
   int _capacity;  // the real size of the array
   int _start;     // the start index in the array, which is zero index of the slice
   int _len;       // the size for the slice, NOTE: not the size of array
@@ -20,15 +20,14 @@ The second layer is the backed array. It is pointed to by _ptr.
 
 It may not exist. If array does not exist, i.e. _ptr == nullptr, the slice is nil.
 ```
-// Golang code
-var a []int   // a is nil
+var b []int   // b is nil
 ```
 
-a is nil which looks like in C++ code
+b is nil which looks like in C++ code
 ```
 // C++ code
-a = struct slice {
-  _ptr = nullptr;   // so in Golang, a is nil
+b = struct slice {
+  _ptr = nullptr;   // so in Golang, b is nil
   _capacity = 0;
   _start = 0;
   _len = 0;
@@ -38,13 +37,13 @@ a = struct slice {
 After make(), we create the backed array
 ```
 // Golang code
-a := make([]int, 5, 10)
+b := make([]int, 5, 10)
 ```
 
 If in C++, it looks like
 ```
 // C++ code
-a = struct slice {
+b = struct slice {
   _ptr = new int[10];   // the allocated memory is the second layer, which is pointed to by _ptr
   _capacity = 10;
   _start = 0;
@@ -52,12 +51,12 @@ a = struct slice {
 };
 ```
 
-After a initiazlized by make(), if we code a[2:9] in Golang, it looks like
+After a initiazlized by make(), if we code b[2:9] in Golang, it looks like
 ```
 // C++ code
-a[2:9] = struct slice {
-  _ptr = a->_ptr; // the backed array does not change
-  _capacity = a->_capacity;   // capacity does not change
+b[2:9] = struct slice {
+  _ptr = b->_ptr; // the backed array does not change
+  _capacity = b->_capacity;   // capacity does not change
   _start = 2; // start index is from 2
   _len = 7;   // 9-2=7, the slice's size is 7, only have room for 7 elements
 };
@@ -66,13 +65,13 @@ a[2:9] = struct slice {
 Then 
 ```
 // Golang code
-a = a[2:9]  // means assig (copy) the a[2:9] struct to a
+b = b[2:9]  // means assig (copy) the b[2:9] struct to b
 ```
 
-So a now looks like after a = a[2:9]
+So b now looks like after b = b[2:9]
 ```
 // in C++ code
-a = struct {
+b = struct {
   _ptr = the original backed array with size of 10
   _capacity = the original of 10
   _start = new position of 2 in the array as 0 index of the slice
@@ -83,13 +82,13 @@ a = struct {
 so 
 ```
 // in Golang
-a[1] = 99
+b[1] = 99
 ```
 
 equals to 
 ```
 // C++ code
-a->ptr_[2+1] = 99;
+b->ptr_[2+1] = 99;
 ```
 
 # example 1
@@ -111,21 +110,21 @@ func printSlice(s []int) {
 }
 
 func main() {
-	a := make([]int, 6, 6)
+	b := make([]int, 6, 6)
 
 	for i := 0; i < 3; i++ {
-		a[i] = i + 1
+		b[i] = i + 1
 	}
 
-	printSlice(a)
-	a = a[:3]
-	printSlice(a)
+	printSlice(b)
+	b = b[:3]
+	printSlice(b)
 
-	f(a)
+	f(b)
 
-	printSlice(a)
-	a = a[:6]
-	printSlice(a)
+	printSlice(b)
+	b = b[:6]
+	printSlice(b)
 }
 ```
 
@@ -137,11 +136,11 @@ len=3 cap=6 [1 2 3]
 len=6 cap=6 [1 2 3 4 5 6]
 ```
 
-In f(), s is diffenent from a in terms of memory address. In Golang, every parameter is passed by copy.
+In f(), s is diffenent from b in terms of memory address. In Golang, every parameter is passed by value, i.e. a copy.
 
-But s has the same internal value of a, i.e. s->_ptr == a->_ptr.
+But s has the same internal value of b, i.e. s->_ptr == b->_ptr.
 
-When we save 4, 5, 6 to s, it saves the value to the backed array, which is the same array of a.
+When we save 4, 5, 6 to s, it saves the value to the backed array, which is the same array of b.
 
 So the last line output is [1 2 3 4 5 6].
 
@@ -165,21 +164,21 @@ func printSlice(s []int) {
 }
 
 func main() {
-	a := make([]int, 6, 6)
+	b := make([]int, 6, 6)
 
 	for i := 0; i < 3; i++ {
-		a[i] = i + 1
+		b[i] = i + 1
 	}
 
-	printSlice(a)
-	a = a[:3]
-	printSlice(a)
+	printSlice(b)
+	b = b[:3]
+	printSlice(b)
 
-	f(a)
+	f(b)
 
-	printSlice(a)
-	a = a[:6]
-	printSlice(a)
+	printSlice(b)
+	b = b[:6]
+	printSlice(b)
 }
 ```
 
@@ -191,20 +190,20 @@ len=3 cap=6 [1 2 3]
 len=6 cap=6 [1 2 3 0 0 0]
 ```
 
-The result is differnet from example 1. The last line output is [1 2 3 0 0 0] if compared to example 1's [1 2 3 4 5 6].
+The result is differnet from example one. The last line output is [1 2 3 0 0 0] if compared to example one's [1 2 3 4 5 6].
 
 Why?
 
-Because in f(), the _ptr in s is changed to totally new array which is created by make().
+Because in f(), the _ptr in s is changed to a totally new array which is created by make().
 
-s->_ptr in f() is differnt from a->_ptr in main(), so the backed arrays are different.
+s->_ptr in f() is differnt from b->_ptr in main(), so the backed arrays are different.
 
-In example 1, the _ptr in s and a is same, i.e. the backed array does not change.
+In example one, the _ptr in s and b is same, i.e. the backed array does not change.
 
 # slice nil
 
 Note:
 
-var a int[] is differnt from a := []int{}
+var b int[] is differnt from b := []int{}
 
 [Check nil for more details](nil.md)
