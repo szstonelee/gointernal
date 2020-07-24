@@ -1,7 +1,7 @@
 
 # string internal
 
-Golang string is almost like Java String
+Golang string is almost like Java String.
 
 ## pass reference value to function
 
@@ -16,22 +16,24 @@ func main() {
 }
 ```
 
-In the above example, if b is assigned with a big string, e.g. one million length string, in f(), there is no one more million char be allocated for s. b and s share the same underlying array of char.
+In the above example, if b is assigned with a big string, e.g. one million length string, in f(), there is no one more million char be allocated for s. 
+
+b and s share the same underlying array of char.
 
 NOTE: We use char. Acutually, in Golang, the correct name for char is rune. 
 
 If you code for Java, the memory allocation is the same.
 
-It is different for C++
+It is different for C++.
 ```
 // C++ code
 void f(std::string s) {
   size_t l = s.size();
 }
 ```
-In the C++ code, unlike Golang, in f(), there are a new memory allocated for s. If a is string of one million char, when in f(), one million more memory is allocated for s. It is a big burden for C++ if passing the std::string directly as value. In the following section, we will know how C++ deals with this.
+In the C++ code, unlike Golang, in f(), there are a new memory allocated for s. If b is a string of one million char, when in f(), one million more memory is allocated and copied from b for s. It is a big burden for C++ if passing the huge std::string directly as value. In the following section, we will know how C++ deals with the issue.
 
-So usually, like Java, we pass the string directly as the argument in Golang.
+So usually, like Java, we pass string directly as argument in Golang.
 
 ## string is immutable like Java
 ```
@@ -46,7 +48,7 @@ func main() {
 }
 ```
 
-Similar to Java, string in Golang is immutable. In s += " :tail" in f(), Golang creates a new string for s, which is "abc :tail" . It can not change the variable b. So in main(), Println(b) will output "abc", not "abc :tail".
+Similar to Java, string in Golang is immutable. For s += " :tail" in f(), Golang creates a new string for s, which is "abc :tail" . It can not change the variable b. So in main(), Println(b) will output "abc", not "abc :tail".
 
 It is like what the Java does
 ```
@@ -57,7 +59,7 @@ void f(String s) {
 
 void main() {
   String b = "abc";
-  f(b);											// b does not change
+  f(b);	// b does not change
   System.out.Println(b);    // will print "abc"
 }
 ```
