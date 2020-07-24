@@ -53,7 +53,7 @@ The greater the distance between a name's declaration and its uses,
 the longer the name should be.
 ```
 
-#count# is returned at the end of the function with the declaration from the start.
+*count* is returned at the end of the function with the declaration from the start.
 
 But sometimes, if names are a little longer, it makes clearer.
 
