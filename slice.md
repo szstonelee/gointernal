@@ -44,21 +44,21 @@ If in C++, it looks like
 ```
 // C++ code
 b = struct slice {
-  _ptr = new int[10];   // the allocated memory is the second layer, which is pointed to by _ptr
+  _ptr = new int[10];   // the allocated 10-integer memory is the second layer, which is pointed to by _ptr
   _capacity = 10;
   _start = 0;
   _len = 5;
 };
 ```
 
-After a initiazlized by make(), if we code b[2:9] in Golang, it looks like
+After b is initiazlized by make(), if we code b[2:9] in Golang, it looks like
 ```
 // C++ code
 b[2:9] = struct slice {
   _ptr = b->_ptr; // the backed array does not change
   _capacity = b->_capacity;   // capacity does not change
   _start = 2; // start index is from 2
-  _len = 7;   // 9-2=7, the slice's size is 7, only have room for 7 elements
+  _len = 7;   // 9-2=7, the slice's size is 7, i.e. room for 7 elements
 };
 ```
 
@@ -79,20 +79,19 @@ b = struct {
 };
 ```
 
-so 
+so after b = b[2:9], if we do
 ```
 // in Golang
 b[1] = 99
 ```
-
-equals to 
+it equals to 
 ```
 // C++ code
 b->ptr_[2+1] = 99;
 ```
 
-# example 1
-## code
+# Example one
+## Code
 ```
 package main
 
@@ -128,7 +127,7 @@ func main() {
 }
 ```
 
-## result
+## Result and explanation
 ```
 len=6 cap=6 [1 2 3 0 0 0]
 len=3 cap=6 [1 2 3]
@@ -140,13 +139,13 @@ In f(), s is diffenent from b in terms of memory address. In Golang, every param
 
 But s has the same internal value of b, i.e. s->_ptr == b->_ptr.
 
-When we save 4, 5, 6 to s, it saves the value to the backed array, which is the same array of b.
+When we save 4, 5, 6 to s, it saves to the same internal backed array of b.
 
 So the last line output is [1 2 3 4 5 6].
 
-# example 2
+# Example two
 
-## code 
+## Code 
 ```
 package main
 
@@ -182,7 +181,7 @@ func main() {
 }
 ```
 
-## result
+## Result and explanation
 ```
 len=6 cap=6 [1 2 3 0 0 0]
 len=3 cap=6 [1 2 3]
@@ -200,7 +199,7 @@ s->_ptr in f() is differnt from b->_ptr in main(), so the backed arrays are diff
 
 In example one, the _ptr in s and b is same, i.e. the backed array does not change.
 
-# slice nil
+# Slice nil
 
 Note:
 
