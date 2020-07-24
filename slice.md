@@ -135,7 +135,9 @@ len=3 cap=6 [1 2 3]
 len=6 cap=6 [1 2 3 4 5 6]
 ```
 
-In f(), s is diffenent from b in terms of memory address. In Golang, every parameter is passed by value, i.e. a copy.
+In f(), s is diffenent from b in terms of memory address. 
+
+In Golang, every parameter is passed by value, i.e. a copy.
 
 But s has the same internal value of b, i.e. s->_ptr == b->_ptr.
 
@@ -152,7 +154,7 @@ package main
 import "fmt"
 
 func f(s []int) {
-	s = make([]int, 6, 6)   // NOTE: the only changed code if compared with example 1
+	s = make([]int, 6, 6)   // NOTE: the only changed code if compared with example one
 	for i := 3; i < 6; i++ {
 		s[i] = i + 1  // write 4, 5, 6
 	}
@@ -195,7 +197,7 @@ Why?
 
 Because in f(), the _ptr in s is changed to a totally new array which is created by make().
 
-s->_ptr in f() is differnt from b->_ptr in main(), so the backed arrays are different.
+After make(), s->_ptr in f() is different from b->_ptr, so the backed arrays are different.
 
 In example one, the _ptr in s and b is same, i.e. the backed array does not change.
 
