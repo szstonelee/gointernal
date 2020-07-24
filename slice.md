@@ -9,10 +9,10 @@ The first layer is always there, if imagined in C++, it looks like
 ```
 // C++ code to imagine the slice data structure in Golang
 struct slice {
-  void* _ptr;	// which points to a backed array
+	void* _ptr;	// which points to a backed array
 	int _start;	// the start index in the array, which is zero index of the slice, NOTE: _start can not be decremented
 	int _len;	// the length of the slice, how many elements can be saved in the slice 
-  int _capacity;  // the capacity for the slice, it equals capapcity of array minus _start
+	int _capacity;  // the capacity for the slice, it equals capapcity of array minus _start
 };
 ```
 
@@ -27,10 +27,10 @@ b is nil which looks like in C++ code
 ```
 // C++ code
 b = struct slice {
-  _ptr = nullptr;   // so in Golang, b is nil
-  _start = 0;
+	_ptr = nullptr;   // so in Golang, b is nil
+	_start = 0;
 	_len = 0;
-  _capacity = 0;
+	_capacity = 0;
 };
 ```
 
@@ -44,10 +44,10 @@ If in C++, it looks like
 ```
 // C++ code
 b = struct slice {
-  _ptr = new int[10];   // the allocated 10-integer memory is the second layer, which is pointed to by _ptr
-  _start = 0;
+	_ptr = new int[10];   // the allocated 10-integer memory is the second layer, which is pointed to by _ptr
+	_start = 0;
 	_len = 5;
-  _capacity = 10;
+	_capacity = 10;
 };
 ```
 
@@ -55,10 +55,10 @@ After b is initiazlized by make(), if we code b[2:9] in Golang, it looks like
 ```
 // C++ code
 b[2:9] = struct slice {
-  _ptr = b->_ptr; // the backed array does not change
-  _start = 2; // start index is from 2
+	_ptr = b->_ptr; // the backed array does not change
+	_start = 2; // start index is from 2
 	_len = 7;	// 9 -2, which means you can save 7 elements in the slice
-  _capacity = 8;   // array size - _start, i.e. 10 - 2 = 8
+	_capacity = 8;   // array size - _start, i.e. 10 - 2 = 8
 };
 ```
 
@@ -72,10 +72,10 @@ So b now looks like after b = b[2:9]
 ```
 // in C++ code
 b = struct {
-  _ptr = the original backed array with size of 10
+	_ptr = the original backed array with size of 10
 	_start = new position of 2 in the array as 0 index of the slice
 	_len = ths size of slice, which is 7
-  _capacity = the capacity of slice, which is 8
+	_capacity = the capacity of slice, which is 8
 };
 ```
 
