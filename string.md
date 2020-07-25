@@ -16,7 +16,7 @@ func main() {
 }
 ```
 
-In the above example, if b is assigned with a big string, e.g. one million length string, in f(), there is no one more million char be allocated for s. 
+In the above example, if b is assigned with a big string, e.g. one million length string, in f(), there is no one more million char allocated for s. 
 
 b and s share the same underlying array of char.
 

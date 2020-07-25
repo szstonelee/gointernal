@@ -12,7 +12,7 @@ struct slice {
 	void* _ptr;	// which points to a backed array
 	int _start;	// the start index in the array, zero index of the slice
 	int _len;	// the length of the slice, how many elements can be saved in the slice 
-	int _capacity;  // the capacity for the slice, it equals capapcity of array minus _start
+	int _capacity;  // the capacity for the slice, it equals capacity of array minus _start
 };
 ```
 NOTE: _start can not be decremented in future, and len_ <= capacity_
@@ -58,7 +58,7 @@ After b is initiazlized by make(), if we code b[2:9] in Golang, it looks like
 b[2:9] = struct slice {
 	_ptr = b->_ptr; // the backed array does not change
 	_start = 2; // start index is from 2
-	_len = 7;	// 9 -2, which means you can save 7 elements in the slice
+	_len = 7;	// 9-2, which means you can save 7 elements in the slice
 	_capacity = 8;   // array size - _start, i.e. 10 - 2 = 8
 };
 ```

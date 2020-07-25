@@ -104,8 +104,8 @@ fmt.Println(*p6)  // will not panic
 Because map, slice and channel has two layers. 
 
 Check 
-1. [slice internal](https://blog.golang.org/slices-intro)
-2. [chanel internal](channel.mid)
+1. [slice internal](slice.md)
+2. [chanel internal](channel.md)
 
 The top layer is a data structure for abstraction or logic description.
 
