@@ -28,7 +28,7 @@ func (myStruct) method() {}
 func main() {
 	var b myStruct = myStruct{id: 1}
 
-	var p1 *myStruct = &a
+	var p1 *myStruct = &b
 
 	var i1 myInterface = b
 	var i2 myInterface = p1
