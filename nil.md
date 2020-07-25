@@ -27,8 +27,8 @@ frm.Println(b == nil)  // illegal
 A slice variable has three items (fields), 
 
 1. _ptr, internal pointer, point to the backed array 
-2. _len, internal length, int size
-3. _cap, internal capacity, int size
+2. _len, internal length
+3. _cap, internal capacity
 
 NOTE: 
 1. _ptr is not a Golang pointer type. Golang pointer will be described below.

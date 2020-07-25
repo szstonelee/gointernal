@@ -30,3 +30,6 @@
 
 # Golang naming
 [Details are here](naming.md)
+
+# Golang copy
+[Details are here](copy.md)

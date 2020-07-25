@@ -60,14 +60,15 @@ void f(String s) {
 void main() {
   String b = "abc";
   f(b);	// b does not change
-  System.out.Println(b);    // will print "abc"
+  System.out.println(b);    // will print "abc"
 }
 ```
 
 # We can use stirng the C++ way of pointer
 
-But differnt from Java, in Golang, we can use pointer for string. By pointer, we can make b and s share the same underlying array of char.
+But differnt from Java, in Golang, we can use pointer for string. 
 
+By pointer, we can make b and s share the same underlying array of char.
 ```
 func f(s *string) {
 	*s += " :tail"
@@ -80,7 +81,7 @@ func main() {
 }
 ```
 
-It is similar to C++, which can use pointer to solve the burden for huge string in the above example.
+It is similar to C++, which can use pointer to solve the burden issue for huge string in the above example.
 ```
 // C++ code
 void f(std::string *s) {  // or using reference like void f(std::string& s) { s += " :tail";}

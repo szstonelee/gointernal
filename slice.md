@@ -10,11 +10,12 @@ The first layer is always there, if imagined in C++, it looks like
 // C++ code to imagine the slice data structure in Golang
 struct slice {
 	void* _ptr;	// which points to a backed array
-	int _start;	// the start index in the array, which is zero index of the slice, NOTE: _start can not be decremented
+	int _start;	// the start index in the array, zero index of the slice
 	int _len;	// the length of the slice, how many elements can be saved in the slice 
 	int _capacity;  // the capacity for the slice, it equals capapcity of array minus _start
 };
 ```
+NOTE: _start can not be decremented in future, and len_ <= capacity_
 
 The second layer is the backed array. It is pointed to by _ptr.
 
