@@ -3,7 +3,7 @@
 
 [nil video From Google](https://www.youtube.com/watch?v=ynoY2xz-F8s)
 
-[Golang construction and initiation](new.md)
+[Golang construction](new.md)
 
 [Interface Internal](interface.md)
 
