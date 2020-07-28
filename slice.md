@@ -15,7 +15,7 @@ struct slice {
 	int _capacity;  // the capacity for the slice, it equals capacity of array minus _start
 };
 ```
-NOTE: _start can not be decremented in future, and len_ <= capacity_
+NOTE: _start can not be decremented in future, and _len <= _capacity.
 
 The second layer is the backed array. It is pointed to by _ptr.
 
@@ -28,7 +28,7 @@ b is nil which looks like in C++ code
 ```
 // C++ code
 b = struct slice {
-	_ptr = nullptr;   // so in Golang, b is nil
+	_ptr = nullptr; 
 	_start = 0;
 	_len = 0;
 	_capacity = 0;
@@ -52,7 +52,7 @@ b = struct slice {
 };
 ```
 
-After b is initiazlized by make(), if we code b[2:9] in Golang, it looks like
+After b is initialized by make(), b[2:9] in Golang looks like
 ```
 // C++ code
 b[2:9] = struct slice {
