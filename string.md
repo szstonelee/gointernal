@@ -64,11 +64,11 @@ void main() {
 }
 ```
 
-# We can use stirng the C++ way of pointer
+# use stirng as pointer, like C++
 
 But differnt from Java, in Golang, we can use pointer for string. 
 
-By pointer, we can make b and s share the same underlying array of char.
+By pointer, we can make b and s share the same underlying array of char which can be modified.
 ```
 func f(s *string) {
 	*s += " :tail"
@@ -80,6 +80,8 @@ func main() {
 	println(b) 	// will print "abc :tail"
 }
 ```
+
+When it comes to *s += " :tail" in f(), because string is immutable in Golang, another array of char, with the new value "abc :tail", is allocated for s. But because s is pointer, the change actually affect the variable of b in main(). In another word, a new array of char replace the old array of char. s is the address of b, so the replacement happens to b.  
 
 It is similar to C++, which can use pointer to solve the burden issue for huge string in the example above.
 ```
