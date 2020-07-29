@@ -7,7 +7,7 @@ Slice has two layers.
 
 The first layer is always there, if imagined in C++, it looks like
 ```
-// C++ code to imagine the slice data structure in Golang
+// C++ code for imagining the data structure
 struct slice {
 	void* _ptr;	// which points to a backed array
 	int _start;	// the start index in the array, zero index of the slice
@@ -15,11 +15,11 @@ struct slice {
 	int _capacity;  // the capacity for the slice, it equals capacity of array minus _start
 };
 ```
-NOTE: _start can not be decremented in future, and _len <= _capacity.
+NOTE: _start can not be decremented in future, and always _len <= _capacity.
 
 The second layer is the backed array. It is pointed to by _ptr.
 
-It may not exist. If array does not exist, i.e. _ptr == nullptr, the slice is nil.
+The backed array may not exist. If it does not exist, i.e. _ptr == nullptr, the slice is nil.
 ```
 var b []int   // b is nil
 ```
@@ -35,7 +35,7 @@ b = struct slice {
 };
 ```
 
-After make(), we create the backed array
+After make(), we create the backed array.
 ```
 // Golang code
 b := make([]int, 5, 10)
@@ -54,7 +54,7 @@ b = struct slice {
 
 After b is initialized by make(), b[2:9] in Golang looks like
 ```
-// C++ code
+// Pseudo C++ code for imagination of b[2:9]
 b[2:9] = struct slice {
 	_ptr = b->_ptr; // the backed array does not change
 	_start = 2; // start index is from 2
@@ -71,7 +71,7 @@ b = b[2:9]  // means assign (copy) the b[2:9] struct to b
 
 So b now looks like after b = b[2:9]
 ```
-// in C++ code
+// Pseudo C++ code
 b = struct {
 	_ptr = the original backed array with size of 10
 	_start = new position of 2 in the array as 0 index of the slice
@@ -88,10 +88,10 @@ b[1] = 99
 it equals to 
 ```
 // C++ code
-b->ptr_[2+1] = 99;
+b->_ptr[2+1] = 99;
 ```
 
-You can check the trick for the following Golang code
+You can check the trick in the following Golang code.
 ```
 b := make([]int, 5, 10)
 b = b[2:9]
@@ -99,7 +99,7 @@ b = b[4:]
 fmt.Println(len(b), cap(b))
 ```
 
-The output is: len(b) = 3, cap(b) = 4
+The output is: len(b) = 3, cap(b) = 4.
 
 # Example one
 ## Code
@@ -123,7 +123,7 @@ func main() {
 	b := make([]int, 6, 6)
 
 	for i := 0; i < 3; i++ {
-		b[i] = i + 1
+		b[i] = i + 1	// write 1, 2, 3
 	}
 
 	printSlice(b)
@@ -206,7 +206,7 @@ The result is differnet from example one. The last line output is [1 2 3 0 0 0] 
 
 Why?
 
-Because in f(), the _ptr in s is changed to a totally new array which is created by make().
+Because in f(), the _ptr in s is pointed to another array, a totally new array, which is created by make().
 
 After make(), s->_ptr in f() is different from b->_ptr, so the backed arrays are different.
 

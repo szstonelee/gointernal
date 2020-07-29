@@ -81,7 +81,7 @@ func main() {
 }
 ```
 
-When it comes to *s += " :tail" in f(), because string is immutable in Golang, another array of char, with the new value "abc :tail", is allocated for s. But because s is pointer, the change actually affect the variable of b in main(). In another word, a new array of char replace the old array of char. s is the address of b, so the replacement happens to b.  
+When it comes to *s += " :tail" in f(), because string is immutable in Golang, another array of char, with the new value of "abc :tail", is allocated for s. But because s is pointer, the change actually affect the variable of b in main(). In another word, a new array of char replace the old array of char. s is the address of b, so the replacement happens to b.  
 
 It is similar to C++, which can use pointer to solve the burden issue for huge string in the example above.
 ```
