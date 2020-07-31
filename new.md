@@ -1,4 +1,4 @@
-# Golang construction and initiation of object
+# Golang construction and initializaion of object
 
 In other language, like C++, you need the `new` operator to construct object in heap (if not optimized by compiler), 
 
@@ -16,7 +16,7 @@ private:
 void foo() {
   MyClass* p = new MyClass(100); // in heap
 
-  MyClass a(200);  // in stack, after exit func(), a will disappear
+  MyClass b(200);  // in stack, after exit foo(), b will disappear
 
   delete p; // if no delete, memory will leak
 }
@@ -24,9 +24,9 @@ void foo() {
 
 In Java, every object (no primitives like int, bool, long) is allocated in heap by new (if not optimized by compiler for escape analyzation)
 
-Otherwise, the reference to the object in Java is null which means there is no object.
+Otherwise, a reference in Java is null which means there is no object associated with the reference.
 
-NOTE: You can treat Java Clone(), ClassLoader, Reflection, auto box, assingnment of String literal as a special construction way.
+NOTE: You can treat Java Clone(), ClassLoader, Reflection, Auto-box, assingnment of String literal as a special construction way.
 
 In Golang, it is a little different.
 
@@ -54,7 +54,7 @@ var b myStruct
 ```
 c := myStruct{} // equivalent to var c myStruct
 ```
-NOTE: var c []int is not equivalent to c := []int{}, see the following section of make()
+NOTE: var c []int is not equivalent to c := []int{}, see the following section of make().
 
 The difference is that *new* returns pointer while *var* and *literal* return no pointer. You can do
 
@@ -77,7 +77,7 @@ func init() *myStruct {
 
 ## new with pointer
 
-For pointer, it is trivial and subtle
+For pointer, it is trivial and subtle.
 
 ```
 var p1 *myStruct
@@ -99,24 +99,42 @@ var p6 *string = new(string)
 fmt.Println(*p6)  // will not panic
 ```
 
+The pointer itself in Golang is an object. But its purpose is pointed to another object. If it is not pointed to another object, the pointer is nil. When we reference the pointer of nil, it will panic.
+
+So if we use new() for a pointer, actually, there are two objects constructed. One is the new object, the other is the pointer.
+
+## heap or stack
+
+When object constructed in Golang, where it lives, stack or heap?
+
+It depends. For Golang, it will try its best to construct the objects in stack, because stack costs much less than heap. Even with new(), the object may exist in stack. That is one reason for why Golang is quicker and has less overhead of GC than Java.
+
+NOTE: Java tries to do the same efficient way by escape analyzation like Golang, but it is harder for Java to construct the object in stack because Golang is simpler than Java.
+
 ## make() is for the underlying initialization for map, slice and channel
 
-Because map, slice and channel has two layers. 
+Because map, slice and channel has two layers, after the construction, there may be a following initialization for these kinds of object.
 
 Check 
 1. [slice internal](slice.md)
 2. [chanel internal](channel.md)
 
-The top layer is a data structure for abstraction or logic description.
+The top layer is a data structure for abstraction or logic description. 
 
-The underlying layer is the real data structure for the type. For slice, it is an array. For map, it is a hash map.
+The top layer always exists.
 
-When map, slice, channel is constructed, it only has the top layer, but no underlying layer.
+The underlying layer is the real data for the type. For slice, it is an array. For map, it is a hash map.
 
-After initialization, like make() does or with literal assignment, the underlying layer is constructed.
+When map, slice, channel are declared at the beginning, they only has the top layer, but no underlying layer.
+
+If only the top layer exist, it is nil.
+
+After initialization, like make() does or by literal assignment, the underlying layer is constructed.
 
 ```
 var a []myStruct = make(myStruct, 5, 10)      // length = 5, capcaity = 10
+// will print false
+fmt.Println(a == nil) 
 
 var b []int
 // will print true, the top layer exist, but the underlying layer, i.e. the int array, does not exist

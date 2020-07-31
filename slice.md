@@ -10,7 +10,7 @@ The first layer is always there, if imagined in C++, it looks like
 // C++ code for imagining the data structure
 struct slice {
 	void* _ptr;	// which points to a backed array
-	int _start;	// the start index in the array, zero index of the slice
+	int _start;	// the start index in the array which means zero index of the slice
 	int _len;	// the length of the slice, how many elements can be saved in the slice 
 	int _capacity;  // the capacity for the slice, it equals capacity of array minus _start
 };
@@ -179,7 +179,7 @@ func main() {
 	b := make([]int, 6, 6)
 
 	for i := 0; i < 3; i++ {
-		b[i] = i + 1
+		b[i] = i + 1	// write 1, 2, 3
 	}
 
 	printSlice(b)
@@ -216,6 +216,6 @@ In example one, the _ptr in s and b is same, i.e. the backed array does not chan
 
 Note:
 
-var b int[] is differnt from b := []int{}
+var b int[] is totally different from b := []int{}
 
 [Check nil for more details](nil.md)

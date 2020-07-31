@@ -131,7 +131,7 @@ We can treat pointer in Golang similar to slice and map.
 
 It means there is an internal _ptr in pointer. 
 
-(pointer has another item which is type, but I am not sure whether the type item is in compile time or run time)
+(pointer has another item which is type, but I am not sure whether the type item lives in run time)
 
 ## when pointer is nil or not nil
 
