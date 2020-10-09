@@ -33,7 +33,7 @@ GOMAXPROCS=3 go run x.go
 ```
 and with other GOMAXPROCS numbers like 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ...
 
-The results of all test case are the same: 
+The results of all test case for Go 1.14.5 are the same: 
 
 **All can return with x printed as 0**
 
@@ -43,11 +43,11 @@ Then I tried the code in Mac with macOS Catalina (10.15.6). It is the same.
 
 Then I tried another go version 1.12.9, the result in Linux is different. (I do not test in MacOS) 
 
-For 1.12.9, the result is: 
+For 1.12.9, all results of test case are the same:
 
 **No return, No termination**
 
-There are three results for three versions of Golang runtime.
+There are three kinds of result basing on Go runtime version.
 
 So I decided to dive deeper.
 
@@ -93,4 +93,29 @@ func main() {
 }
 ```
 
+## comments for the modified test code
+
+[tNum is the max number of user space thread which are running simultaneously.](https://stackoverflow.com/questions/39245660/number-of-threads-used-by-go-runtime) 
+
+gNum is the number of concurrent go routines. Each of go routines run an infinite loop.
+
+Main() will sleep for one second, and if it can return to OS, it will print the value of x.
+
+NOTE: From the above link, tNum is the max number of the concurrent running thread. It hints that maybe there are more threads than tNum if the additional threads are sleeping.
+
+## test cases
+
+| tNum | gNum | Result |
+| :--: | :--: | :-- |
+| 2 | 1 | x = 0 |
+| 2 | 2 | No Return |
+| 2 | 4 | No Return |
+| 4 | 2 | x = 0 |
+| 4 | 3 | x = 0 |
+| 4 | 4 | No Return |
+| 4 | 5 | No Return |
+| 5 | 3 | x = 0 |
+| 5 | 4 | x = 0 |
+| 5 | 5 | No Return |
+| 5 | 6 | No Return |
 
