@@ -33,3 +33,6 @@
 
 # Golang copy
 [Details are here](copy.md)
+
+# Golang schedule
+[Details are here](schedule.md)
