@@ -25,7 +25,7 @@ func main() {
 }
 ```
 
-I supposed the code in the article is run in Linux. I tested the above code in my virtual Linux (by [Multipass](https://github.com/canonical/multipass)) which is Ubuntu 20.04.1 LTS in my Mac host. The go runtime version is Go 1.14.5 linux/amd64.
+I supposed the code in the article is run in Linux. I tested the above code in my virtual Linux (by [Multipass](https://github.com/canonical/multipass)) which is Ubuntu 20.04.1 LTS in my Mac host. The Go runtime version is 1.14.5 linux/amd64.
 
 But the result is different. In my Mac, which is 4 cpu core, I tried to run 
 ```
@@ -95,45 +95,59 @@ func main() {
 
 [tNum is the max number of user space thread which are running simultaneously.](https://stackoverflow.com/questions/39245660/number-of-threads-used-by-go-runtime) 
 
-gNum is the number of Goroutines to launch at the same time. Each of Goroutines run an infinite loop.
+gNum is the number of Goroutines to launch at the same time. Each of Goroutines runs an infinite loop.
 
-main() will sleep for one second after the launchs, and if it can go on, it will print the value of x and call exit() implicitly to return to OS.
+main() will sleep for one second after the launch, and if it can go on, it will print the value of x and call exit() implicitly to return to OS.
 
 In Go, [exit() will terminate the whole process](https://stackoverflow.com/questions/25518531/ok-to-exit-program-with-active-goroutine), so all threads in the process will stop. It is different from Java. In Java, the main() thread exit, but if the Java app is not a daemon type, JVM runtime will wait for all other threads to stop.
 
 And from [stackoverflow](https://stackoverflow.com/questions/53388154/is-the-main-function-runs-as-a-goroutine), main() can be treated as an special and additional Goroutine for the above code.
 
+So basiclly, we have gNum+1 Goroutines. And we want to know the result for the Goroutine of main, i.e. whether it returns to OS.
+
 From the above link, tNum is the max number of the concurrent running threads. 
 
-It hints that maybe there are more threads than tNum if the additional threads are not running, e.g. sleeping.
+It hints that maybe there are more threads than tNum if the additional threads are not running, e.g. sleeping or blocked.
 
-### what I imagine of go routines
+### What I imagine of Goroutine
 
 [A good article about the Go scheduler is here](https://www.ardanlabs.com/blog/2018/08/scheduling-in-go-part2.html)
 
 One Goroutine is not corresponded to one thread, i.e. Goroutine != OS thread.
 
-In some articles, the Goroutine is named as Go thread or green thread, and OS thread is named as Machine thread or real thread. Here, in this article, for simiplicity, thread is OS thread. And we try to view Goroutine from the view of OS thread.
+In some articles, the Goroutine is named as Go thread or green thread, and OS thread is named as machine thread or real thread. Here in this article, for simiplicity, thread is always OS thread. We try to view Goroutine from the view of OS thread.
 
-A Goroutine is like a task job. When we create a Goroutine, we just add a new task entry to a total task queue(GRQ). Then Go runtime dynamiclly determines how many threads are needed to finish these tasks. Go runtime has a bounded limit for the number of threads which is the GOMAXPROCS. But GOMAXPROCS only limits the running threads. 
+A Goroutine is like a task job. When we create a Goroutine, we just add a new task entry to a global task queue(GRQ). Then Go runtime dynamiclly determines how many threads are needed to finish these tasks. Go runtime has a bounded limit for the number of threads which is the GOMAXPROCS. But GOMAXPROCS only limits the running threads. 
 
-Threads in Go will be schedule to each core to be execute. For each core, there is a task queue(LRQ). Tasks in GRQ will be distributed to LRQ and each task will be executed in a thread. The key is that because there are less context switchs for Goroutine task, the overload is less.   
+So here Goroutine == task.
 
-Each length of LRQ is dynamic because some tasks finish quickly, or some tasks will block. So when a thread is schedule to an empty LRQ, the Go runtime can steal some tasks from other LRQ so the length of LRQ is balanced.
+Threads in Go will be scheduled to each cpu core. For each core, there is a task queue(LRQ). Tasks in GRQ will be distributed to LRQ and each task from LPQ will be executed in a thread. 
 
-If the task is blocked for I/O of networking, Go runtime use epoll for the task. So the network-blocked Goroutine will be taken care by the Net Poller. And the thread will go on with other tasks in the LRQ.
+Because 
+1. A thread can execute a lot of tasks in one LRQ, so overhead of thread context switch is low.  
+2. One task does not need to be finished first for next task to be scheduled, so the tasks in one LRQ are exececuted in one thread concurrently.
+3. Task schedule overhead is 1 tenth of thread overhead. Overhead for thread switch is a couple of us. Overhead for task switch is hundreds of ns.
+4. If a task will be blocked, Go will deal with the blocked task specially to make the cpu core available for a running thread. i.e. The thread for the core never block. 
 
-If the task is blocked for I/O of disk in Linux, the thread will be blocked. But Go runtime know that, so a new thread will take over the current LPQ. The blocked thread with the blocked Goroutine will wait to finish, i.e. unblocked.  After the blocked disk call finished, the Goroutine will return to the LPQ.   
+These are the keys of Go Scheduler.
+
+Each length of LRQ is dynamic because some tasks finish quickly, or some one will block. So when a thread is scheduled to an empty LRQ, the Go runtime can steal some tasks from other LRQ so the lengths of LRQ are balanced.
+
+If the task is blocked for I/O of networking, Go runtime applies epoll/IO Completion for the task. So the network-blocked Goroutine will be taken care by the Net Poller. i.e. The network-blocked task will no be in the LRQ at the point of time. And the thread will go on with other tasks in the LRQ.
+
+If the task is blocked for I/O of disk in Linux, the thread will be blocked. But Go runtime knows that, so a new thread will take over the current LPQ. The blocked thread with the blocked task will wait to finish, i.e. when to be unblocked. After the blocked disk call finishs, the Goroutine will return to the LPQ, and the unblocked thread can return to the thread pool. [There is a proposal for an improvement for this strategy if you want to dive deeper](http://pages.cs.wisc.edu/~riccardo/assets/diskio.pdf).
 
 NOTE: For Windows, because disk I/O can be treated as network I/O by IO Completion, the schedule in Windows is the same for disk and network I/O.
 
-For Timer, [referenced from the article - Illustrated Tales of Go Runtime Scheduler](https://medium.com/@ankur_anand/illustrated-tales-of-go-runtime-scheduler-74809ef6d19b), we can treating timer as the similiar way as network I/O. [You can dive deeper from the implementation](https://blog.gopheracademy.com/advent-2016/go-timers/). 
+For Timer, [referenced from the article - Illustrated Tales of Go Runtime Scheduler](https://medium.com/@ankur_anand/illustrated-tales-of-go-runtime-scheduler-74809ef6d19b), we can treat timer something similiar to network I/O. [You can dive deeper from the implementation of timer](https://blog.gopheracademy.com/advent-2016/go-timers/). 
 
-If the runtime has chance, it will check the epoll or timer event for the blocked task. It is like Mutex in Linux. In Linux some threads are waiting for the synchronized primitive of Mutex, and can be scheduled on it. Blocked threads are just a queue for mutex. The difference is that mutex checking and thread schedule are handled by kernel and in kernel space, but the timer/epoll events are checked by Go runtime and the schedule of Go routine is in user space and handled by Go runtime. 
+If the runtime has chance, it will check the epoll or timer event for the blocked task. 
+
+It is like Mutex in Linux. In Linux some threads are waiting for the synchronized primitive of Mutex, and can be scheduled on it. Blocked threads are just a queue for mutex. The difference is that mutex checking and thread scheduling are handled by kernel and in kernel space, but the timer/epoll events are checked by Go runtime and the scheduling of Go routine is in user space and handled by Go Scheduler. 
 
 Wnen will the runtime have chance to check? Any Go system call like runtime.Gosched() will do that. 
 
-But if your go routine run an infinite loop, there is no chance to call Go runtime system call. So the event of timer or epoll will be ignored.
+But if your Go routine run an infinite loop, there is no chance. So the event of timer or epoll will be ignored.
 
 e.g. 1
 
@@ -141,19 +155,29 @@ We create 3 Go routines, and Go runtime may create 3 threads for the tasks. Afte
 
 e.g. 2
 
-We create 10 Go routines, and GOMAXPROCS = 5. 
+We create 8 Go routines, and GOMAXPROCS = 4. 
 
-Go runtime may create five threads, each thread may have a task queue with 2 Go rouitnes in each queue.
+Go runtime may create four threads, each thread run each core with a task queue of length 2.
 
 e.g. 3
 
-In the above example, one Go routine call read() from disk. Go runtime will create a new thread for the read() Go routine. The number of threads is 6, but it meets the requirement of GOMAXPROCS, which is 5 because the created thread is blocked for read() and is not running.
+In the above example, one Go routine call read() from disk. Go runtime will move out the thread with the Go routine which calls read(). 
+
+There could be two strategies for scheduling.
+
+First:
+
+A new thread could be created to replace the move-out thread for the left Go routines in the LRQ. This time, the thread number is 5, but it meets GOMAXPROCS = 4 because the move-out thread is blocked, not running.
+
+Second:
+
+The other goroutine in the same LRQ can be moved to another LRQ and be executed by another thread for the LRQ. The number of thread is 4 in this case.
 
 e.g. 4
 
-From e.g. 2, a Go routine call sleep(). No more thread will be created. The sleep() routine will be marked or may be moved to another queue for the same thread. If the thread has chance to call Go runtime sys call, the runtime will check the timer event. If the event is coming, the runtime will resume the sleeping task.
+From e.g. 2, a Go routine call sleep(). No more thread will be created. The sleep() Go routine will be moved to a special queue which is for the timer event and be taken care by the Go runtime. If there is a chance to call into Go, the runtime will check the timer event. If the event is coming, the runtime will resume the sleeping task.
 
-But the Golang timer is not the same as the kernel timer. For kernel timer, because it is based on hardware and Linux is preemptive, each thread will have a chance to run or be checked. For Go timer, if the thread can not call into the runtime, which is invoked by any Go system call, the timer event will be ignored. So Go routines are co-operative, similiar to Python aysc framework.
+But the Golang timer is not the same as the kernel timer. For kernel timer, because it is based on hardware and Linux is preemptive, each thread will have a chance to run or be checked. For Go timer, if no chance to call into the runtime, which is invoked by any Go system call, the timer event will be ignored. So Go routines are co-operative, similiar to Python aysc framework.
 
 ## Test Environment for Go 1.12.9
 
