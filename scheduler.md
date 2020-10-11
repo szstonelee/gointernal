@@ -180,7 +180,7 @@ We create 3 Goroutines, and Go runtime may create 3 user-code threads for the ta
 
 e.g. 2
 
-Assuming a machine have 4 cpu cores, and we create 8 Goroutines, and GOMAXPROCS = 4. 
+Assuming a machine has 4 cpu cores, we create 8 Goroutines, and GOMAXPROCS = 4. 
 
 Go runtime may create four user-code threads, each thread run each core with a task queue of length 2.
 
@@ -190,7 +190,7 @@ Assuming a machine have 4 cpu cores and we set GOMAXPROCS = 5.
 
 There are four LRQs for the cores.
 
-If Go runtime create 5 user-code threads, each thread has a chance to run in one/another core for the corresponded LRQ.
+If Go runtime create 5 user-code threads, each thread has some chances to run in one/another core for the corresponded LRQ.
 
 e.g. 4
 
