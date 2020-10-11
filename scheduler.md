@@ -28,7 +28,7 @@ func main() {
 From the author's pratice, if the number of Goroutines is one less than the number of cpu core of the machine by changing the code to 
 ```threads := runtime.GOMAXPROCS(0)-1```, x will be printed as 0. If the number of Gorouines is equal to the numbrer of cpu core, the program does not terminate, i.e. no return with x not be printed.
 
-NOTE: for MAC OS, the number of cpu core reported by Go is virtual which is the double of real core number, e.g., In MacOS, if your machine has core of 4, runtime.GOMAXPROCS(0) returns 8. But if you have virtual Linux in MAC, runtime.GOMAXPROCS(0) returns 4.
+NOTE: for MAC OS, the number of cpu core reported by Go is virtual which is the double of real cpu core number, e.g., In Mac OS, if your machine has cpu core of 4, runtime.GOMAXPROCS(0) returns 8. But if you have virtual Linux in MAC, runtime.GOMAXPROCS(0) returns 4.
 
 I supposed the code in the article is run in Linux. I tested the above code in my virtual Linux (by [Multipass](https://github.com/canonical/multipass)) which is Ubuntu 20.04.1 LTS in my Mac host. The Go runtime version is 1.14.5 linux/amd64.
 
@@ -118,7 +118,7 @@ So basiclly, we have gNum+1 Goroutines. And we want to know the result for the G
 
 One Goroutine is not corresponded to one thread, i.e. Goroutine != OS thread.
 
-In some articles, the Goroutine is named as Go thread or green thread or lightweight thread, and OS thread is named as machine thread or real thread. Here in this article, for simiplicity, thread is always OS thread. We try to check Goroutine from the view of OS thread.
+In some articles, the Goroutine is named as Go thread or green thread or lightweight thread, and OS thread is named as machine thread or kernel thread or real thread. Here in this article, for simiplicity, thread is always OS thread. We try to check Goroutine from the view of OS thread.
 
 Thread is the basic unit for OS to run code.
 
@@ -136,7 +136,7 @@ The following 4 points are the keys of Go Scheduler.
 
 3. Task schedule overhead is 1 tenth of thread switch overhead. Average overhead for thread switch is a couple of microseconds. Average overhead for task switch is hundreds of nanoseconds.
 
-4. If a task will be blocked, Go will deal with the blocked task specially to make the cpu core available for a running thread to run next task. i.e. **A thread running in the core never block**. Please read the following details.
+4. If a task will be blocked, Go will deal with the blocked task specially to make the cpu core available for a running thread to run next task. i.e. **A thread running in the core (for current LRQ) never block**. Please read the following details.
 
 Each length of LRQ is dynamic because some tasks finish quickly, some one will block. When a thread is scheduled to an empty LRQ, the Go runtime can steal some tasks from other LRQ so the lengths of LRQ are balanced.
 
@@ -144,7 +144,7 @@ If the task is blocked for I/O of networking, Go runtime applies epoll/IOCP(IO C
 
 If the task is blocked for I/O of disk in Linux, the thread will be blocked. But Go runtime knows that. So a new thread will take over the current LPQ. The blocked thread with the blocked task will wait to finish, i.e. until unblocked. After the blocked disk call finishs, the Goroutine will return to the LPQ, and the unused thread can return to the thread pool or be destroyed. [There is a proposal for an improvement for this strategy if you want to dive deeper](http://pages.cs.wisc.edu/~riccardo/assets/diskio.pdf).
 
-Again, a thread running in the core never block in Go.
+Again, a thread running in the core, for current LRQ, never block in Go.
 
 The I/O for disk is so special in Linux because regular file descriptor are always blocked device.
 
@@ -157,7 +157,7 @@ NOTE: For Windows, because disk I/O can be treated as network I/O by IO Completi
 
 For Timer, [referenced from the article - Illustrated Tales of Go Runtime Scheduler](https://medium.com/@ankur_anand/illustrated-tales-of-go-runtime-scheduler-74809ef6d19b), we can treat timer something similiar to network I/O. [You can dive deeper from the implementation of Go timer](https://blog.gopheracademy.com/advent-2016/go-timers/). 
 
-If the runtime has chance, it will re-schedule thre returned un-blocked task which are tiggered by timer, network I/O, regular file I/O. 
+If the runtime has chance, it will re-schedule the returned un-blocked task which are triggered by timer, network I/O, regular file I/O. 
 
 When will the runtime have chance to check? Any Go system call like runtime.Gosched() will do that. 
 
@@ -165,17 +165,27 @@ But if your Go routine run an infinite loop, there is no chance for Go Scheduler
 
 e.g. 1
 
+Assuming the machine have 4 cpu core and we set GOMAXPROCS = 3.
+
 We create 3 Go routines, and Go runtime may create 3 user-code threads for the tasks. After each Go routine finish in each thread. The threads will be reclaimed or return to a thread pool to rest.
 
 e.g. 2
 
-We create 8 Go routines, and GOMAXPROCS = 4. 
+Assuming the machine have 4 cpu core , and we create 8 Go routines, and GOMAXPROCS = 4. 
 
 Go runtime may create four user-code threads, each thread run each core with a task queue of length 2.
 
 e.g. 3
 
-In the above example, one Go routine call read() from disk. Go runtime will move out the thread with the Goroutine which calls read(). 
+Assuming the machine have 4 cpu cores and we set GOMAXPROCS = 5.
+
+There are four LRQs for the cores.
+
+If Go runtime create 5 user-code threads, each thread has a chance to run in one/another core for the corresponded LRQ.
+
+e.g. 4
+
+Supposed from example 2, one Go routine call read() from disk. Go runtime will move out the thread with the Goroutine which calls read(). 
 
 There could be two strategies for scheduling.
 
@@ -185,11 +195,11 @@ A new user-code thread could be created to replace the blocked thread for the ot
 
 Second:
 
-The other Goroutine in the same LRQ can be moved to another LRQ and be taken care by another thread. The number of user-code thread is 4 in this case.
+The other Goroutine in the same LRQ can be moved to another LRQ and be taken care by another thread. The number of user-code thread is 4 in this case, i.e., one is blocked, the other 3 are running.
 
-e.g. 4
+e.g. 5
 
-From e.g. 2, a Go routine call sleep(). No more user-code thread will be created. The sleep() Goroutine will be moved to a special queue which is for the timer event and be taken care by the Go runtime. 
+From e.g. 2, a Go routine call sleep(). No more user-code thread will be created. The sleep() Goroutine will be moved out to a special queue (accurately, a min-heep) which is for the timer event and be taken care by the Go runtime. 
 
 ## Test Environment for Go 1.12.9
 
