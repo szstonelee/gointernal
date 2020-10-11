@@ -25,7 +25,9 @@ func main() {
 }
 ```
 
-From the author's pratice, if the number of Goroutines is one less than the number of cpu core of the machine by changing the code to threads := runtime.GOMAXPROCS(0)-1, x will be printed as 0. If the number of Gorouines is equal to the numbrer of cpu core, the program does not terminate, i.e. no return with x not be printed.
+From the author's pratice, if the number of Goroutines is one less than the number of cpu core of the machine by changing the code to 
+```threads := runtime.GOMAXPROCS(0)-1```
+x will be printed as 0. If the number of Gorouines is equal to the numbrer of cpu core, the program does not terminate, i.e. no return with x not be printed.
 
 NOTE: for MAC OS, the number of cpu core reported by Go is virtual which is the double of real core number, e.g., In MacOS, if your machine has core of 4, untime.GOMAXPROCS(0) returns 8. But if you have virtual Linux in MAC, untime.GOMAXPROCS(0) returns 4.
 
