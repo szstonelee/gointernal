@@ -160,13 +160,13 @@ But if your Go routine run an infinite loop, there is no chance for Go Scheduler
 
 e.g. 1
 
-We create 3 Go routines, and Go runtime may create 3 threads for the tasks. After each Go routine finish in each thread. The threads will be reclaimed or return to a thread pool to rest.
+We create 3 Go routines, and Go runtime may create 3 user-code threads for the tasks. After each Go routine finish in each thread. The threads will be reclaimed or return to a thread pool to rest.
 
 e.g. 2
 
 We create 8 Go routines, and GOMAXPROCS = 4. 
 
-Go runtime may create four threads, each thread run each core with a task queue of length 2.
+Go runtime may create four user-code threads, each thread run each core with a task queue of length 2.
 
 e.g. 3
 
@@ -176,15 +176,15 @@ There could be two strategies for scheduling.
 
 First:
 
-A new thread could be created to replace the blocked thread for the other Goroutines in the LRQ. This time, the thread number is 5, but it meets GOMAXPROCS = 4 because the replaced thread is blocked, not running.
+A new user-code thread could be created to replace the blocked thread for the other Goroutines in the LRQ. This time, the user-code thread number is 5, but it meets GOMAXPROCS = 4 because the replaced thread is blocked, i.e. not running.
 
 Second:
 
-The other Goroutine in the same LRQ can be moved to another LRQ and be taken care by another thread. The number of thread is 4 in this case.
+The other Goroutine in the same LRQ can be moved to another LRQ and be taken care by another thread. The number of user-code thread is 4 in this case.
 
 e.g. 4
 
-From e.g. 2, a Go routine call sleep(). No more thread will be created. The sleep() Goroutine will be moved to a special queue which is for the timer event and be taken care by the Go runtime. 
+From e.g. 2, a Go routine call sleep(). No more user-code thread will be created. The sleep() Goroutine will be moved to a special queue which is for the timer event and be taken care by the Go runtime. 
 
 ## Test Environment for Go 1.12.9
 
