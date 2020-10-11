@@ -170,17 +170,17 @@ If the runtime has chance, it will re-schedule the returned un-blocked task whic
 
 When will the runtime have chance to check? Any Go system call like runtime.Gosched() will do that. 
 
-But if your Go routine run an infinite loop, there is no chance for Go Scheduler to take effect. So the returned tasks will be ignored.
+But if your Goroutine run an infinite loop, there is no chance for Go Scheduler to take effect. So the returned tasks will be ignored.
 
 e.g. 1
 
 Assuming a machine has 4 cpu cores and we set GOMAXPROCS = 3.
 
-We create 3 Go routines, and Go runtime may create 3 user-code threads for the tasks. After each Go routine finish in each thread. The threads will be reclaimed or return to a thread pool to rest.
+We create 3 Goroutines, and Go runtime may create 3 user-code threads for the tasks. After each Goroutine finish in each thread. The threads will be reclaimed or return to a thread pool to rest.
 
 e.g. 2
 
-Assuming a machine have 4 cpu cores, and we create 8 Go routines, and GOMAXPROCS = 4. 
+Assuming a machine have 4 cpu cores, and we create 8 Goroutines, and GOMAXPROCS = 4. 
 
 Go runtime may create four user-code threads, each thread run each core with a task queue of length 2.
 
@@ -194,7 +194,7 @@ If Go runtime create 5 user-code threads, each thread has a chance to run in one
 
 e.g. 4
 
-Supposed from example 2, one Go routine call read() from disk. Go runtime will move out the thread with the Goroutine which calls read(). 
+Supposed from example 2, one Goroutine call read() from disk. Go runtime will move out the thread with the Goroutine which calls read(). 
 
 There could be two strategies for scheduling.
 
@@ -208,7 +208,7 @@ The other Goroutine in the same LRQ can be moved to another LRQ and be taken car
 
 e.g. 5
 
-Supposed from e.g. 2, a Go routine call sleep(). No more user-code thread will be created. The sleep() Goroutine will be moved out to a special queue (accurately, a min-heap data structure for timer events) which is for the timer event and be taken care by the Go runtime. 
+Supposed from e.g. 2, a Goroutine call sleep(). No more user-code thread will be created. The sleep() Goroutine will be moved out to a special queue (accurately, a min-heap data structure for timer events) which is for the timer event and be taken care by the Go runtime. 
 
 ## Test Environment for Go 1.12.9
 
