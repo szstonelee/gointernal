@@ -26,10 +26,9 @@ func main() {
 ```
 
 From the author's pratice, if the number of Goroutines is one less than the number of cpu core of the machine by changing the code to 
-```threads := runtime.GOMAXPROCS(0)-1```
-x will be printed as 0. If the number of Gorouines is equal to the numbrer of cpu core, the program does not terminate, i.e. no return with x not be printed.
+```threads := runtime.GOMAXPROCS(0)-1```, x will be printed as 0. If the number of Gorouines is equal to the numbrer of cpu core, the program does not terminate, i.e. no return with x not be printed.
 
-NOTE: for MAC OS, the number of cpu core reported by Go is virtual which is the double of real core number, e.g., In MacOS, if your machine has core of 4, untime.GOMAXPROCS(0) returns 8. But if you have virtual Linux in MAC, untime.GOMAXPROCS(0) returns 4.
+NOTE: for MAC OS, the number of cpu core reported by Go is virtual which is the double of real core number, e.g., In MacOS, if your machine has core of 4, runtime.GOMAXPROCS(0) returns 8. But if you have virtual Linux in MAC, runtime.GOMAXPROCS(0) returns 4.
 
 I supposed the code in the article is run in Linux. I tested the above code in my virtual Linux (by [Multipass](https://github.com/canonical/multipass)) which is Ubuntu 20.04.1 LTS in my Mac host. The Go runtime version is 1.14.5 linux/amd64.
 
@@ -105,7 +104,7 @@ It hints that maybe there are more threads than tNum if the additional threads a
 
 gNum is the number of Goroutines to launch at the same time. Each of Goroutines runs an infinite loop.
 
-main() will sleep for one second after the launch, and if it can go on, it will print the value of x and call exit() implicitly to return to OS.
+main() will sleep for one second after the launch. If it can go on, it will print the value of x and call exit() implicitly to return to OS.
 
 In Go, [exit() will terminate the whole process](https://stackoverflow.com/questions/25518531/ok-to-exit-program-with-active-goroutine), so all threads in the process will stop. It is different from Java. In Java, the main() thread exit, but if the Java app is not a daemon type, JVM runtime will wait for all other threads to stop.
 
@@ -123,11 +122,11 @@ In some articles, the Goroutine is named as Go thread or green thread or lightwe
 
 Thread is the basic unit for OS to run code.
 
-A Goroutine is a task job. When we create a Goroutine (go func()...), we just add a new task entry to a global task queue(GRQ). Then Go runtime dynamiclly determines how many threads are needed to finish these tasks. Go runtime has a bounded limit for the number of threads which is the GOMAXPROCS. But GOMAXPROCS only limits the running threads. The threads which controlled by Go runtime and do system work, are not counted for GOMAXPROCS, e.g. GC threads. 
+A Goroutine is a task job. When we create a Goroutine (go func()...), we just add a new task entry to a global task queue(**GRQ**). Then Go runtime dynamiclly determines how many threads are needed to finish these tasks. Go runtime has a bounded limit for the number of threads which is the GOMAXPROCS. But GOMAXPROCS only limits the running threads. The threads which controlled by Go runtime and do system work, are not counted for GOMAXPROCS, e.g. GC threads. 
 
 So here Goroutine == task.
 
-Threads in Go will be scheduled to each cpu core to run. For each core, there is a task queue(LRQ). Tasks in GRQ will be distributed to LRQ. And each task from LPQ will be consumed in a thread which goes to a core. 
+Threads in Go will be scheduled to each cpu core to run. For each core, there is a task queue(**LRQ**). Tasks in GRQ will be distributed to LRQ. And each task from LPQ will be run in a thread which goes to a core. 
 
 The following 4 points are the keys of Go Scheduler.
 
@@ -135,15 +134,15 @@ The following 4 points are the keys of Go Scheduler.
 
 2. One task does not need to be finished first for next task to be scheduled, so the tasks in one LRQ are exececuted concurrently for the same thread. This is different from the [Java ExectutorService](http://tutorials.jenkov.com/java-util-concurrent/executorservice.html). In Java, each task must be finished then consumer threads pick next one from the synchronized queue. How Go does that? [Because in each function call, there is a chance for Go runtime to switch Goroutines](https://golang.org/doc/go1.2#preemption). 
 
-3. Task schedule overhead is 1 tenth of thread switch overhead. Avarage overhead for thread switch is a couple of microseconds. Avrage overhead for task switch is hundreds of nanoseconds.
+3. Task schedule overhead is 1 tenth of thread switch overhead. Average overhead for thread switch is a couple of microseconds. Average overhead for task switch is hundreds of nanoseconds.
 
-4. If a task will be blocked, Go will deal with the blocked task specially to make the cpu core available for a running thread to run next task. i.e. A thread running in the core never block. Please read the following details.
+4. If a task will be blocked, Go will deal with the blocked task specially to make the cpu core available for a running thread to run next task. i.e. **A thread running in the core never block**. Please read the following details.
 
-Each length of LRQ is dynamic because some tasks finish quickly, or some one will block. When a thread is scheduled to an empty LRQ, the Go runtime can steal some tasks from other LRQ so the lengths of LRQ are balanced.
+Each length of LRQ is dynamic because some tasks finish quickly, some one will block. When a thread is scheduled to an empty LRQ, the Go runtime can steal some tasks from other LRQ so the lengths of LRQ are balanced.
 
 If the task is blocked for I/O of networking, Go runtime applies epoll/IOCP(IO Completion Port) for the task. So the network-blocked Goroutine will be taken care by the [Net Poller](https://morsmachine.dk/netpoller). i.e. The network-blocked task will be moved out of the LRQ at the point of time. And the current thread will go on with other tasks in the LRQ. The specific thread of Net Poller will deal with the blocking task.
 
-If the task is blocked for I/O of disk in Linux, the thread will be blocked. But Go runtime knows that, so a new thread will take over the current LPQ. The blocked thread with the blocked task will wait to finish, i.e. until unblocked. After the blocked disk call finishs, the Goroutine will return to the LPQ, and the unused thread can return to the thread pool or be destroyed. [There is a proposal for an improvement for this strategy if you want to dive deeper](http://pages.cs.wisc.edu/~riccardo/assets/diskio.pdf).
+If the task is blocked for I/O of disk in Linux, the thread will be blocked. But Go runtime knows that. So a new thread will take over the current LPQ. The blocked thread with the blocked task will wait to finish, i.e. until unblocked. After the blocked disk call finishs, the Goroutine will return to the LPQ, and the unused thread can return to the thread pool or be destroyed. [There is a proposal for an improvement for this strategy if you want to dive deeper](http://pages.cs.wisc.edu/~riccardo/assets/diskio.pdf).
 
 Again, a thread running in the core never block in Go.
 
