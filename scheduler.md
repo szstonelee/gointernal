@@ -117,7 +117,7 @@ In some articles, the Goroutine is named as Go thread or green thread or lightwe
 
 Thread is the basic unit for OS to run code.
 
-A Goroutine is a task job. When we create a Goroutine (go func()...), we just add a new task entry to a global task queue(GRQ). Then Go runtime dynamiclly determines how many threads are needed to finish these tasks. Go runtime has a bounded limit for the number of threads which is the GOMAXPROCS. But GOMAXPROCS only limits the running threads. 
+A Goroutine is a task job. When we create a Goroutine (go func()...), we just add a new task entry to a global task queue(GRQ). Then Go runtime dynamiclly determines how many threads are needed to finish these tasks. Go runtime has a bounded limit for the number of threads which is the GOMAXPROCS. But GOMAXPROCS only limits the running threads. The threads which controlled by Go runtime and do system work, are not counted for GOMAXPROCS, e.g. GC threads. 
 
 So here Goroutine == task.
 
@@ -129,7 +129,7 @@ The following 4 points are the keys of Go Scheduler.
 
 2. One task does not need to be finished first for next task to be scheduled, so the tasks in one LRQ are exececuted concurrently for the same thread. This is different from the [Java ExectutorService](http://tutorials.jenkov.com/java-util-concurrent/executorservice.html). In Java, each task must be finished then consumer threads pick next one from the synchronized queue. How Go does that? [Because in each function call, there is a chance for Go runtime to switch Goroutines](https://golang.org/doc/go1.2#preemption). 
 
-3. Task schedule overhead is 1 tenth of thread overhead. Avarage overhead for thread switch is a couple of microseconds. Avrage overhead for task switch is hundreds of nanoseconds.
+3. Task schedule overhead is 1 tenth of thread switch overhead. Avarage overhead for thread switch is a couple of microseconds. Avrage overhead for task switch is hundreds of nanoseconds.
 
 4. If a task will be blocked, Go will deal with the blocked task specially to make the cpu core available for a running thread to run next task. i.e. A thread running in the core never block. Please read the following details.
 
@@ -137,28 +137,26 @@ Each length of LRQ is dynamic because some tasks finish quickly, or some one wil
 
 If the task is blocked for I/O of networking, Go runtime applies epoll/IOCP(IO Completion Port) for the task. So the network-blocked Goroutine will be taken care by the [Net Poller](https://morsmachine.dk/netpoller). i.e. The network-blocked task will be moved out of the LRQ at the point of time. And the current thread will go on with other tasks in the LRQ. The specific thread of Net Poller will deal with the blocking task.
 
-If the task is blocked for I/O of disk in Linux, the thread will be blocked. But Go runtime knows that, so a new thread will take over the current LPQ. The blocked thread with the blocked task will wait to finish, i.e. when to be unblocked. After the blocked disk call finishs, the Goroutine will return to the LPQ, and the unused thread can return to the thread pool or be destroyed. [There is a proposal for an improvement for this strategy if you want to dive deeper](http://pages.cs.wisc.edu/~riccardo/assets/diskio.pdf).
+If the task is blocked for I/O of disk in Linux, the thread will be blocked. But Go runtime knows that, so a new thread will take over the current LPQ. The blocked thread with the blocked task will wait to finish, i.e. until unblocked. After the blocked disk call finishs, the Goroutine will return to the LPQ, and the unused thread can return to the thread pool or be destroyed. [There is a proposal for an improvement for this strategy if you want to dive deeper](http://pages.cs.wisc.edu/~riccardo/assets/diskio.pdf).
 
 Again, a thread running in the core never block in Go.
 
 The I/O for disk is so special in Linux because regular file descriptor are always blocked device.
 
 1. [NON_BLOCKED has no effect for regular file descriptor](https://www.remlab.net/op/nonblock.shtml).
-2. When poll for ready status of read and write of a regular file descriptor, it always return True, i.e. ready.
+2. When poll for ready status of read and write of a regular file descriptor, it always return True, i.e. always ready.
 
 The internal reason is related to the page cache. Even a page has been read from a disk file and located in the memory of page cache, the following read() could be blocked because the page could be evicted from cache just then. For write, even there are enough memory for it, the page in memory could need to write-back to disk. Page cache is unpredicatable because it is a cache. That is why Linux AIO needs DIRECT_IO, no buffered-IO.
 
 NOTE: For Windows, because disk I/O can be treated as network I/O by IO Completion Port, the schedule in Windows is the same for disk and network I/O.
 
-For Timer, [referenced from the article - Illustrated Tales of Go Runtime Scheduler](https://medium.com/@ankur_anand/illustrated-tales-of-go-runtime-scheduler-74809ef6d19b), we can treat timer something similiar to network I/O. [You can dive deeper from the implementation of timer](https://blog.gopheracademy.com/advent-2016/go-timers/). 
+For Timer, [referenced from the article - Illustrated Tales of Go Runtime Scheduler](https://medium.com/@ankur_anand/illustrated-tales-of-go-runtime-scheduler-74809ef6d19b), we can treat timer something similiar to network I/O. [You can dive deeper from the implementation of Go timer](https://blog.gopheracademy.com/advent-2016/go-timers/). 
 
-If the runtime has chance, it will check the epoll or timer event for the blocked task. 
+If the runtime has chance, it will re-schedule thre returned un-blocked task which are tiggered by timer, network I/O, regular file I/O. 
 
-It is like Mutex in Linux. In Linux some threads are waiting for the synchronized primitive of Mutex, and can be scheduled on it. Blocked threads are just a queue for mutex. The difference is that mutex checking and thread scheduling are handled by kernel and in kernel space, but the timer/epoll events are checked by Go runtime and the scheduling of Goroutine is in user space and handled by Go Scheduler. 
+When will the runtime have chance to check? Any Go system call like runtime.Gosched() will do that. 
 
-Wnen will the runtime have chance to check? Any Go system call like runtime.Gosched() will do that. 
-
-But if your Go routine run an infinite loop, there is no chance. So the event of timer or epoll will be ignored.
+But if your Go routine run an infinite loop, there is no chance for Go Scheduler to take effect. So the returned tasks will be ignored.
 
 e.g. 1
 
@@ -172,23 +170,21 @@ Go runtime may create four threads, each thread run each core with a task queue 
 
 e.g. 3
 
-In the above example, one Go routine call read() from disk. Go runtime will move out the thread with the Go routine which calls read(). 
+In the above example, one Go routine call read() from disk. Go runtime will move out the thread with the Goroutine which calls read(). 
 
 There could be two strategies for scheduling.
 
 First:
 
-A new thread could be created to replace the move-out thread for the other Go routines in the LRQ. This time, the thread number is 5, but it meets GOMAXPROCS = 4 because the move-out thread is blocked, not running.
+A new thread could be created to replace the blocked thread for the other Goroutines in the LRQ. This time, the thread number is 5, but it meets GOMAXPROCS = 4 because the replaced thread is blocked, not running.
 
 Second:
 
-The other goroutine in the same LRQ can be moved to another LRQ and be executed by another thread for the LRQ. The number of thread is 4 in this case.
+The other Goroutine in the same LRQ can be moved to another LRQ and be taken care by another thread. The number of thread is 4 in this case.
 
 e.g. 4
 
-From e.g. 2, a Go routine call sleep(). No more thread will be created. The sleep() Go routine will be moved to a special queue which is for the timer event and be taken care by the Go runtime. If there is a chance to call into Go, the runtime will check the timer event. If the event is coming, the runtime will resume the sleeping task.
-
-But the Golang timer is not the same as the kernel timer. For kernel timer, because it is based on hardware and Linux is preemptive, each thread will have a chance to run or be checked. For Go timer, if no chance to call into the runtime, which is invoked by any Go system call, the timer event will be ignored. So Go routines are co-operative, similiar to Python aysc framework.
+From e.g. 2, a Go routine call sleep(). No more thread will be created. The sleep() Goroutine will be moved to a special queue which is for the timer event and be taken care by the Go runtime. 
 
 ## Test Environment for Go 1.12.9
 
