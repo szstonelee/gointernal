@@ -1,6 +1,6 @@
 # Golang Scheduler internal
 
-## an interesting article
+## An interesting article - A pitfall of golang scheduler
 
 I happened to read an interesting article about Golang schedule internal, which is titled as [A pitfall of golang scheduler](http://www.sarathlakshman.com/2016/06/15/pitfall-of-golang-scheduler).
 
@@ -24,6 +24,8 @@ func main() {
     fmt.Println("x =", x)
 }
 ```
+
+From the author's pratice, if GOMAXPROCS is less then the number of cpu core of the machine, x will be printed as 0. Otherwise, the program does not terminate, i.e. no return with x not be printed.
 
 I supposed the code in the article is run in Linux. I tested the above code in my virtual Linux (by [Multipass](https://github.com/canonical/multipass)) which is Ubuntu 20.04.1 LTS in my Mac host. The Go runtime version is 1.14.5 linux/amd64.
 
