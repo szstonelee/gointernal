@@ -251,7 +251,7 @@ If we modify the code like this
 
 You will find the the result for **No Return** will be changed to **return**. And x will be printed for some value other than zero for tNum > gNum and tNum <= gNum.
 
-For any condition, tNum > gNum or tNum <= gNum, because scheduler has chance to take effect by calling in untime.Gosched(), the main Goroutine has chance to be run. Note, even every thread is running an infinite loop, if Go Scheduler comes to play, every Goroutines has chance to run in the same thread, i.e. Goroutines are concurrent like threads in preemptive Linux OS.
+For any condition, tNum > gNum or tNum <= gNum, because scheduler has chance to take effect by calling in runtime.Gosched(), the main Goroutine has chance to be run. Note, even every thread is running an infinite loop, if Go Scheduler comes to play, every Goroutines has chance to run in the same thread, i.e. Goroutines are concurrent like threads in preemptive Linux OS.
 
 That is why x is not zero. Because main Goroutine run after a Goroutine which run an infinite loop to increment x in the same thread, main Goroutine will see the updated x. 
 
@@ -296,6 +296,7 @@ From the above table, we can guess Go 1.14.5 adds new feature of preemption, e.g
 The following articles demonstrate this.
 
 [For Go 1.13, add preemption](https://medium.com/a-journey-with-go/go-goroutine-and-preemption-d6bc2aa2f4b7).
+
 [For Go 1.14, preemption improved as async preemption](https://medium.com/a-journey-with-go/go-asynchronous-preemption-b5194227371c).
 
 The interesting stuff is:
@@ -303,4 +304,4 @@ The interesting stuff is:
 1. How the schedule algorithm does, which leads some times, the main Goroutine return to OS very early, some times, the main Goroutine get chance to run very late.
 2. x are always to be printed as 0. It seems when preemption takes effects, the context of main Goroutine is isolated. The main Goroutine must run after another Goroutine which increment x for ever, but the x for the two Goroutines are different objects, even they are in the same thread.
 
-The above is two new problems to solve in future.
+The two new problems need to solve in future.
