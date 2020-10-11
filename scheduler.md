@@ -257,7 +257,7 @@ In the duration of the one second, each thread of tNum threads will have a chanc
 
 If tNum > gNum, there is at least one thread which state is not running, and when the runnable thread come to run, it needs to pick a runnable Goroutine which is the come-back main Goroutine. At this point of time, it will call exit() implicitly and return to OS. 
 
-x is printed as 0, because x is cached for each thread. For example, x is located in the register of a cpu core, and when a thread context switch, the register values are saved in the stack of the thread.
+x is printed as 0, because x is cached for each thread. For example, x is located in the register of a cpu core, and when a thread context switch, the register values are saved and restored for switch.
 
 I do not think x is in L1 cache. Because there are thread switch, if x is in L1 cache, it will be flushed to main memory with some value. Then when the thread come to run main Goroutine, it will get the updated value from main memory. It could not be zero in this situation.
 
