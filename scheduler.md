@@ -25,11 +25,14 @@ func main() {
 }
 ```
 
-From the author's pratice, if GOMAXPROCS is less then the number of cpu core of the machine, x will be printed as 0. Otherwise, the program does not terminate, i.e. no return with x not be printed.
+From the author's pratice, if the number of Goroutines is one less than the number of cpu core of the machine by changing the code to threads := runtime.GOMAXPROCS(0)-1, x will be printed as 0. If the number of Gorouines is equal to the numbrer of cpu core, the program does not terminate, i.e. no return with x not be printed.
+
+NOTE: for MAC OS, the number of cpu core reported by Go is virtual which is the double of real core number, e.g., In MacOS, if your machine has core of 4, untime.GOMAXPROCS(0) returns 8. But if you have virtual Linux in MAC, untime.GOMAXPROCS(0) returns 4.
 
 I supposed the code in the article is run in Linux. I tested the above code in my virtual Linux (by [Multipass](https://github.com/canonical/multipass)) which is Ubuntu 20.04.1 LTS in my Mac host. The Go runtime version is 1.14.5 linux/amd64.
 
-But the result is different. In my Mac, which is 4 cpu core, I tried to run 
+In my Mac, which is 4 cpu core, I tried to run 
+
 ```
 GOMAXPROCS=3 go run x.go
 ```
@@ -43,17 +46,16 @@ I believe what the article describes is what the author did. So I am curious.
 
 Then I tried the code with macOS Catalina (10.15.6). It is the same, i.e. all return with x = 0.
 
-Then I tried another Go version 1.12.9 in Linux, it is different. (I do not test 1.12.9 in MacOS) 
+Then I tried another Go version 1.12.9 in Linux, it is different. It includes the same result as the author said.
 
-For 1.12.9, all outputs of test case are the same:
+(I do not test 1.12.9 in MacOS) 
 
-**No return, No termination, Infinite loop**
+There are two kinds of output based on what Go runtime version you have.
 
-There are three kinds of output based on what Go runtime version you have.
+1. In 1.12.9, some return, some no return.
+2. In 1.14.5, all return.
 
-1. In the article, some return, some not return.
-2. In 1.12.9, no return.
-3. In 1.14.5, all return.
+That means Go runtime changed algorithm of Go Scheduler from 1.12 to 1.14.
 
 So I decided to dive deeper.
 
@@ -293,7 +295,7 @@ go version
 
 ### Analysis for 1.14.5
 
-From the above table, we can guess Go 1.14.5 adds new feature of preemption, e.g. adding a new system thread which can monitor all states of Goroutines in all working thread.
+From the above table, we can guess Go 1.14.5 adds new feature of preemption, e.g. adding a new system thread which can monitor all states of Goroutines in all user-code thread.
 
 The following articles demonstrate this.
 
