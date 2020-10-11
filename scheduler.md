@@ -2,7 +2,7 @@
 
 ## An interesting article - A pitfall of golang scheduler
 
-I happened to read an interesting article about Golang schedule internal, which is titled as [A pitfall of golang scheduler](http://www.sarathlakshman.com/2016/06/15/pitfall-of-golang-scheduler).
+I happened to read an interesting article about Golang schedule internal, which is [A pitfall of golang scheduler](http://www.sarathlakshman.com/2016/06/15/pitfall-of-golang-scheduler).
 
 The following code is copied from the article.
 
@@ -57,9 +57,9 @@ There are three kinds of output based on what Go runtime version you have.
 
 So I decided to dive deeper.
 
-## new code to dive deeper
+## New code to dive deeper
 
-### code
+### Code
 ```
 package main
 
@@ -198,7 +198,7 @@ Golang Version = 1.12.9 (we will come to 1.14.5 later)
 
 [Go 1.12.9 install manual in Linux](https://www.linode.com/docs/development/go/install-go-on-ubuntu/)
 
-### test cases
+### Test cases
 
 | tNum | gNum | Result |
 | :--: | :--: | :-- |
@@ -214,9 +214,9 @@ Golang Version = 1.12.9 (we will come to 1.14.5 later)
 | 5 | 5 | No Return |
 | 5 | 6 | No Return |
 
-### Analyze for 1.12.9
+### Analysis for 1.12.9
 
-### For the above table
+#### For the above table
 
 From the above table, we can conclude that
 
@@ -241,7 +241,7 @@ I do not think x is in L1 cache. Because there are thread switch, if x is in L1 
 
 If tNum <= gNum, no thread is available for the main Goroutine, because each thread is busy running an infinite loop. There is no chance to call into Go runtime which can schedule for the runnable main Goroutine.
 
-### For adding runtime.Gosched()
+#### For adding runtime.Gosched()
 
 If we modify the code like this
 ```
@@ -272,7 +272,7 @@ export PATH=$PATH:/usr/local/go/bin
 go version
 ```
 
-### test cases
+### Test cases
 
 | tNum | gNum | Result |
 | :--: | :--: | :-- |
@@ -291,7 +291,7 @@ go version
 | 2 | 8000 | x = 0, sometimes 1-2 seconds duration, sometimes more than 80 seconds |
 | 2 | 8001 | x = 0, sometimes 1-2 seconds duration, sometimes more than 70 seconds |
 
-### Analyze for 1.14.5
+### Analysis for 1.14.5
 
 From the above table, we can guess Go 1.14.5 adds new feature of preemption, e.g. adding a new system thread which can monitor all states of Goroutines in all working thread.
 
