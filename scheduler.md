@@ -102,9 +102,16 @@ func main() {
 
 It hints that maybe there are more threads than tNum if the additional threads are not running, e.g. sleeping or blocked.
 
+e.g. tNum can easily be changed to 9 in CLI like 
+```
+GOMAXPROCS=9 go run yourCode.go
+```
+
 gNum is the number of Goroutines to launch at the same time. Each of Goroutines runs an infinite loop.
 
-main() will sleep for one second after the launch. If it can go on, it will print the value of x and call exit() implicitly to return to OS.
+In the above modified code, I set gNum = 4. You can change it to any number you like to test.
+
+main() will sleep for one second after the launch of Goroutines. If it can go on, it will print the value of x and call exit() implicitly to return to OS.
 
 In Go, [exit() will terminate the whole process](https://stackoverflow.com/questions/25518531/ok-to-exit-program-with-active-goroutine), so all threads in the process will stop. It is different from Java. In Java, the main() thread exit, but if the Java app is not a daemon type, JVM runtime will wait for all other threads to stop.
 
