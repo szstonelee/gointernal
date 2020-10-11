@@ -96,20 +96,20 @@ func main() {
 }
 ```
 
-### Comments and notes for the modified test code
+### Comments and notes for the above modified code
 
 [tNum is the max number of user space thread which are running simultaneously.](https://stackoverflow.com/questions/39245660/number-of-threads-used-by-go-runtime) 
 
 It hints that maybe there are more threads than tNum if the additional threads are not running, e.g. sleeping or blocked.
 
-e.g. tNum can easily be changed to 9 in CLI like 
+tNum can easily be changed when run application in CLI. For example, set GOMAXPROCS to 9, type
 ```
 GOMAXPROCS=9 go run yourCode.go
 ```
 
 gNum is the number of Goroutines to launch at the same time. Each of Goroutines runs an infinite loop.
 
-In the above modified code, I set gNum = 4. You can change it to any number you like to test.
+In the above modified code, I set gNum = 4. You can change it to any number you like for all test cases.
 
 main() will sleep for one second after the launch of gNum Goroutines. If it can go on, it will print the value of x and call exit() implicitly to return to OS.
 
@@ -125,33 +125,35 @@ So basiclly, we have gNum+1 Goroutines. And we want to know the result for the G
 
 One Goroutine is not corresponded to one thread, i.e. Goroutine != OS thread.
 
-In some articles, the Goroutine is named as Go thread or green thread or lightweight thread, and OS thread is named as machine thread or kernel thread or real thread. Here in this article, for simiplicity, thread is always OS thread. We try to check Goroutine from the view of OS thread.
+In some articles, the Goroutine is named as Go thread or green thread or lightweight thread, and OS thread is named as machine thread or kernel thread or real thread. Here in this article, for simplicity, thread is always OS thread. We try to check Goroutine from the view of OS thread.
 
 Thread is the basic unit for OS to run code.
 
-A Goroutine is a task job. When we create a Goroutine like go func()..., we just add a new task entry to a global task queue(**GRQ**). Then Go runtime dynamiclly determines how many threads are needed to finish these tasks. Go runtime has a bounded limit for the number of threads which is the GOMAXPROCS. But GOMAXPROCS only limits the running threads. The threads which are controlled by Go runtime, run Go system code and do system work, are not counted for GOMAXPROCS, e.g. GC threads. 
+A Goroutine is a task job. 
+
+When we create a Goroutine like ```go func()...```, we just add a new task entry to a global task queue(**GRQ**). Then Go runtime dynamiclly determines how many threads are needed to finish these tasks. Go runtime has a bounded limit for the number of threads which is the GOMAXPROCS. But GOMAXPROCS only limits the running threads. The threads which are controlled by Go runtime, run Go system code and do system work, are not counted for GOMAXPROCS, e.g. GC threads. 
 
 So here Goroutine == task.
 
-Threads in Go will be scheduled to each cpu core to run. For each core, there is a task queue(**LRQ**). Tasks in GRQ will be distributed to LRQ. And each task from LRQ will be run in a thread which goes to a core. 
+Threads in Go will be scheduled to each cpu core to run. For each core (assuming all core are used), there is a task queue(**LRQ**). Tasks in GRQ will be distributed to LRQ. And each task from LRQ will be run in a thread which goes to a core. 
 
 The following 4 points are the keys of Go Scheduler.
 
-1. A thread can execute a lot of tasks in one LRQ without a thread context switch, so overhead of thread context switch is low. We do not need to context switch thread for each task. 
+1. A thread can execute a lot of tasks in one LRQ without a thread context switch. So overhead of thread context switch is low. We do not need to context switch thread for each task. 
 
-2. One task does not need to be finished first for next task to be scheduled, so the tasks in one LRQ are run concurrently (NOTE: not paralelly) for the same thread. This is different from the [Java ExectutorService](http://tutorials.jenkov.com/java-util-concurrent/executorservice.html). In Java, one task must be finished then a consumer thread can pick next one from the synchronized queue. In Java, task execution are one by one for one thread. But in Go, task execution are concurrent for one thread. That is why Goroutine in Go is like thread in OS and sometimes is called as green thread. How does Go achieve that? [Because in each function call, there is a chance for Go runtime to switch Goroutines](https://golang.org/doc/go1.2#preemption). 
+2. One task does not need to be finished first for next task to be scheduled. So the tasks in one LRQ are run concurrently (NOTE: not paralelly) for the same thread. This is different from the [Java ExectutorService](http://tutorials.jenkov.com/java-util-concurrent/executorservice.html). In Java, one task must be finished, then a consumer thread can pick next one from the synchronized queue. In Java, task execution are one by one for one thread. But in Go, task execution are concurrent for one thread. That is why Goroutine in Go is like thread in OS and sometimes is called as green thread. How does Go achieve that? [Because in each function call, there is a chance for Go runtime to switch Goroutines](https://golang.org/doc/go1.2#preemption). 
 
 3. Task schedule overhead is 1 tenth of thread switch overhead. Average overhead for thread switch is a couple of microseconds. Average overhead for task switch is hundreds of nanoseconds.
 
 4. If a task will be blocked, Go will deal with the blocked task specially to make the cpu core available for a running thread to run next task. i.e. **A thread running in the core (for current LRQ) never block**. Please read the following details.
 
-Each length of LRQ is dynamic because some tasks finish quickly, some one will block. When a thread is scheduled to an empty LRQ, the Go runtime can steal some tasks from other LRQ so the lengths of LRQ are balanced.
+Each length of LRQ is dynamic because some tasks finish quickly, some one will block. When a thread is scheduled to an empty LRQ, the Go runtime can steal some tasks from other LRQ. So the lengths of LRQ are balanced.
 
-If the task is blocked for I/O of networking, Go runtime applies epoll/IOCP(IO Completion Port) for the task. So the network-blocked Goroutine will be taken care by the [Net Poller](https://morsmachine.dk/netpoller). i.e. The network-blocked task will be moved out of the LRQ at the point of time. And the current thread will go on with other tasks in the LRQ. The specific thread of Net Poller will deal with the blocking task.
+If the task is blocked for I/O of networking, Go runtime applies epoll/IOCP(IO Completion Port) for the task. So the network-blocked Goroutine will be taken care by the [Net Poller](https://morsmachine.dk/netpoller). The network-blocked task will be moved out of the LRQ at the point of time. And the current thread will go on with other tasks in the LRQ. The specific thread of Net Poller will deal with the blocking task.
 
 If the task is blocked for I/O of disk in Linux, the thread will be blocked. But Go runtime knows that. So a new thread (probabally an idle thread) will take over the current LRQ. The blocked thread with the blocked task will wait to finish, i.e. until unblocked. After the blocked disk call finishs, the Goroutine will return to the LRQ, and the unused thread can return to the idle thread pool or be destroyed (usually no destroy). [There is a proposal for an improvement for this strategy if you want to dive deeper](http://pages.cs.wisc.edu/~riccardo/assets/diskio.pdf).
 
-Again, a thread running in the cpu core, for current LRQ, never block in Go.
+Again, a thread running in a cpu core, for the current LRQ, never block in Go.
 
 The I/O for disk is so special in Linux because regular file descriptor are always blocked device.
 
@@ -162,7 +164,7 @@ The internal reason is related to the page cache. Even a page has been read from
 
 NOTE: For Windows, because disk I/O can be treated as network I/O by IO Completion Port, the schedule in Windows is the same for disk and network I/O.
 
-For Timer, [referenced from the article - Illustrated Tales of Go Runtime Scheduler](https://medium.com/@ankur_anand/illustrated-tales-of-go-runtime-scheduler-74809ef6d19b), we can treat timer something similiar to network I/O. [You can dive deeper from the implementation of Go timer](https://blog.gopheracademy.com/advent-2016/go-timers/). 
+For timer, [referenced from the article - Illustrated Tales of Go Runtime Scheduler](https://medium.com/@ankur_anand/illustrated-tales-of-go-runtime-scheduler-74809ef6d19b), we can treat timer something similiar to network I/O. [You can dive deeper from the implementation of Go timer](https://blog.gopheracademy.com/advent-2016/go-timers/). 
 
 If the runtime has chance, it will re-schedule the returned un-blocked task which has been triggered by timer, network I/O, regular file I/O. 
 
@@ -172,19 +174,19 @@ But if your Go routine run an infinite loop, there is no chance for Go Scheduler
 
 e.g. 1
 
-Assuming the machine have 4 cpu core and we set GOMAXPROCS = 3.
+Assuming a machine has 4 cpu cores and we set GOMAXPROCS = 3.
 
 We create 3 Go routines, and Go runtime may create 3 user-code threads for the tasks. After each Go routine finish in each thread. The threads will be reclaimed or return to a thread pool to rest.
 
 e.g. 2
 
-Assuming the machine have 4 cpu core , and we create 8 Go routines, and GOMAXPROCS = 4. 
+Assuming a machine have 4 cpu cores, and we create 8 Go routines, and GOMAXPROCS = 4. 
 
 Go runtime may create four user-code threads, each thread run each core with a task queue of length 2.
 
 e.g. 3
 
-Assuming the machine have 4 cpu cores and we set GOMAXPROCS = 5.
+Assuming a machine have 4 cpu cores and we set GOMAXPROCS = 5.
 
 There are four LRQs for the cores.
 
@@ -206,7 +208,7 @@ The other Goroutine in the same LRQ can be moved to another LRQ and be taken car
 
 e.g. 5
 
-From e.g. 2, a Go routine call sleep(). No more user-code thread will be created. The sleep() Goroutine will be moved out to a special queue (accurately, a min-heep) which is for the timer event and be taken care by the Go runtime. 
+Supposed from e.g. 2, a Go routine call sleep(). No more user-code thread will be created. The sleep() Goroutine will be moved out to a special queue (accurately, a min-heap data structure for timer events) which is for the timer event and be taken care by the Go runtime. 
 
 ## Test Environment for Go 1.12.9
 
@@ -243,23 +245,23 @@ From the above table, we can conclude that
 1. if tNum > gNum, return with x printed as 0
 2. otherwise, no return
 
-My Mac have four cores, how many LRQ we have? It equals to min(tNUm, 4). E.g. if tNum == 2, it is 2. if tNum == 5, it is 4.
+My Mac have four cores, how many LRQ do we have? It equals to min(tNUm, 4). For example, if tNum == 2, it is 2; if tNum == 5, it is 4.
 
 There are gNum+1 Goroutines, the plus one Goroutine is main() itself.
 
 Then gNum+1 Goroutines will be distributed to all LRQs.
 
-The main Goroutine will run first. Because main call sleep for one second, the main Goroutine will be moved out of the LRQ. One second later, main Goroutine will come back to one LRQ. And the main Goroutine state is runnable at this point of time.
+The main Goroutine will run first. Because main call sleep() for one second, the main Goroutine will be moved out of the LRQ. One second later, main Goroutine will come back to one LRQ. And the main Goroutine state is runnable at this point of time.
 
-In the duration of one second, each thread of gNum threads will have a chance to run in one core because Linux is preemptive. Each thread needs to pick a not-running Goroutine from one LRQ and then run an infinite loop. So each Goroutine except the main Goroutine will change state from runnable to running. 
+In the duration of the one second, each thread of tNum threads will have a chance to run in one cpu core because Linux is preemptive. Each thread needs to pick a runnable Goroutine from one LRQ. All but main Goroutines run an infinite loop. So each Goroutine except the main Goroutine will change state from runnable to running if there are enough threads. And the states of corresponded thread are also running. 
 
-If tNum > gNum, there is at least one thread which state is not running, and when the non-running thread come to run, it needs pick a not-running Goroutine which is the come-back main Goroutine. At this point of time, it will call exit() implicitly and return to OS. 
+If tNum > gNum, there is at least one thread which state is not running, and when the runnable thread come to run, it needs to pick a runnable Goroutine which is the come-back main Goroutine. At this point of time, it will call exit() implicitly and return to OS. 
 
 x is printed as 0, because x is cached for each thread. For example, x is located in the register of a cpu core, and when a thread context switch, the register values are saved in the stack of the thread.
 
-I do not think x is in L1 cache. Because there are thread switch, if x is in L1 cache, it will be flushed to main memory with some value. Then when the thread come to run main, it will get the updated value from main memory. It could not be zero in this situation.
+I do not think x is in L1 cache. Because there are thread switch, if x is in L1 cache, it will be flushed to main memory with some value. Then when the thread come to run main Goroutine, it will get the updated value from main memory. It could not be zero in this situation.
 
-If tNum <= gNum, no thread is available for the main Goroutine, because each thread is busy running an infinite loop. There is no chance to call into Go runtime which can schedule for the runnable main Goroutine.
+If tNum <= gNum, no runnable thread is available. Every thread is busy running. Although a runnable main Goroutine is in one LRQ, because each thread is busy running an infinite loop, there is no chance to call into Go runtime which can schedule for the runnable main Goroutine in the same thread. In other words, cuncurrency for Goroutine is disabled.
 
 #### For adding runtime.Gosched()
 
@@ -273,9 +275,9 @@ If we modify the code like this
 
 You will find the the result for **No Return** will be changed to **return**. And x will be printed for some value other than zero for tNum > gNum and tNum <= gNum.
 
-For any condition, tNum > gNum or tNum <= gNum, because scheduler has chance to take effect by calling in runtime.Gosched(), the main Goroutine has chance to be run. Note, even every thread is running an infinite loop, if Go Scheduler comes to play, every Goroutines has chance to run in the same thread, i.e. Goroutines are concurrent like threads in preemptive Linux OS.
+For any condition, tNum > gNum or tNum <= gNum, because scheduler has chance to take effect by calling in runtime.Gosched(), the main Goroutine has chance to be run. Note, even every thread is running an infinite loop, if Go Scheduler comes to play, every Goroutines has chance to run in the same thread, i.e. Goroutines are concurrent for one thread like threads in preemptive Linux OS.
 
-That is why x is not zero. Because main Goroutine run after a Goroutine which run an infinite loop to increment x in the same thread, main Goroutine will see the updated x. 
+That is why x is not zero. Because main Goroutine run concurrently with a Goroutine which increments x in the same thread, main Goroutine will see the updated x. 
 
 ## Test Environment for Go 1.14.5
 
@@ -313,9 +315,9 @@ go version
 
 ### Analysis for 1.14.5
 
-From the above table, we can guess Go 1.14.5 adds new feature of preemption, e.g. adding a new system thread which can monitor all states of Goroutines in all user-code thread.
+From the above table, we can guess Go 1.14.5 adds a new feature like preemption. For example, Go runtime can add a new system thread which can monitor all states of Goroutines and all states of user-code threads, and do preemtion.
 
-The following articles demonstrate this.
+The following articles demonstrate this guess.
 
 [For Go 1.13, add preemption](https://medium.com/a-journey-with-go/go-goroutine-and-preemption-d6bc2aa2f4b7).
 
@@ -326,4 +328,4 @@ The interesting stuff is:
 1. How the schedule algorithm does, which leads some times, the main Goroutine return to OS very early, some times, the main Goroutine get chance to run very late.
 2. x are always to be printed as 0. It seems when preemption takes effects, the context of main Goroutine is isolated. The main Goroutine must run after another Goroutine which increment x for ever, but the x for the two Goroutines are different objects, even they are in the same thread.
 
-The two new problems need to solve in future.
+The two myths need to be answered in future.
