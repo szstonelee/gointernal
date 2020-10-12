@@ -326,6 +326,8 @@ The following articles demonstrate this guess.
 The interesting stuff is:
 
 1. How the schedule algorithm does, which leads some times, the main Goroutine return to OS very early, some times, the main Goroutine get chance to run very late.
-2. x are always to be printed as 0. It seems when preemption takes effects, the context of main Goroutine is isolated. The main Goroutine must run after another Goroutine which increment x for ever, but the x for the two Goroutines are different objects, even they are in the same thread.
+2. All x(s) are printed as 0. It seems when preemption takes effects, the context of main Goroutine is isolated. The main Goroutine must run after another Goroutine which increment x for ever, but the x for the two Goroutines are different objects, even they are in the same thread.
 
 The two myths need to be answered in future.
+
+Note: My guess about 2 is related to closure. If each Goroutine is a clousre which use x by copy and not by reference, x will be 0 in main Goroutine. If so, even for the same thread which run increment Gorutine and main Goroutine, the two Goroutines see different x. Referecne for share, copy for isolation in closure.
