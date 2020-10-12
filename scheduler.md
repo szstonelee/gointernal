@@ -309,9 +309,9 @@ go version
 | 5 | 4 | x = 0 |
 | 5 | 5 | x = 0 |
 | 5 | 6 | x = 0 |
-| 2 | 7999 | x = 0, sometimes 1-2 seconds duration, sometimes more than 70 seconds |
-| 2 | 8000 | x = 0, sometimes 1-2 seconds duration, sometimes more than 80 seconds |
-| 2 | 8001 | x = 0, sometimes 1-2 seconds duration, sometimes more than 70 seconds |
+| 2 | 7999 | x = 0, sometimes 1-2 seconds, sometimes more than 70 seconds |
+| 2 | 8000 | x = 0, sometimes 1-2 seconds, sometimes more than 80 seconds |
+| 2 | 8001 | x = 0, sometimes 1-2 seconds, sometimes more than 70 seconds |
 
 ### Analysis for 1.14.5
 
