@@ -255,13 +255,15 @@ The main Goroutine will run first. Because main call sleep() for one second, the
 
 In the duration of the one second, each thread of tNum threads will have a chance to run in one cpu core because Linux is preemptive. Each thread needs to pick a runnable Goroutine from one LRQ. All but main Goroutines run an infinite loop. So each Goroutine except the main Goroutine will change state from runnable to running if there are enough threads. And the states of corresponded thread are also running. 
 
-If tNum > gNum, there is at least one thread which state is not running, and when the runnable thread come to run, it needs to pick a runnable Goroutine which is the come-back main Goroutine. At this point of time, it will call exit() implicitly and return to OS. 
+If tNum > gNum, there is at least one thread which state is not running, and when the runnable thread come to run, it needs to pick a runnable Goroutine. There is only one candidate which is the come-back main Goroutine. At this point of time, it will call exit() implicitly and return to OS. 
+
+If tNum <= gNum, no runnable thread is available. Every thread is busy running. Although a runnable main Goroutine is in one LRQ, because each thread is busy running an infinite loop, there is no chance to call into Go runtime which can schedule for the runnable main Goroutine in the same thread. In other words, cuncurrency for Goroutine is disabled.
+
+Note: tNum can be greater than the number of cpu core, and a LRQ is corresponded to a cpu core. In this scenario, the gNum task will make all of thread to be running (and forever) for it if gNum >= tNum. E.g. When tNum = 5, gNum = 5, five threads running five infinite loops in four cpu core, which are scheduled and switched to run in every cpu core by Linux OS by preemtion. The main task has no chance to be run in any thread because all threads are running. So no return and x does not be printed.
 
 x is printed as 0, because x is cached for each thread. For example, x is located in the register of a cpu core, and when a thread context switch, the register values are saved and restored for switch. And because tNum > gNum, the thread to deal with the come-back main Goroutine has no relation with the gNum threads which increment the x in their thread register.
 
 I do not think x is in L1 cache. There are thread switchs if tNum is bigger than the number of cpu cores. If x is in L1 cache, it would be flushed to main memory with some value when thread context switch. Then when the thread come to run main Goroutine, it will get the updated value from main memory. It could not be zero in this situation.
-
-If tNum <= gNum, no runnable thread is available. Every thread is busy running. Although a runnable main Goroutine is in one LRQ, because each thread is busy running an infinite loop, there is no chance to call into Go runtime which can schedule for the runnable main Goroutine in the same thread. In other words, cuncurrency for Goroutine is disabled.
 
 #### For adding runtime.Gosched()
 
@@ -275,7 +277,7 @@ If we modify the code like this
 
 You will find the result for **No Return** will be changed to **return**. And x will be printed for some random value other than zero for tNum > gNum and tNum <= gNum.
 
-For any condition, tNum > gNum or tNum <= gNum, because scheduler has chance to take effect by calling in runtime.Gosched(), the main Goroutine has chance to be run. Note, even every thread is running an infinite loop, if Go Scheduler comes to play, every Goroutines has chance to run in the same thread, i.e. Goroutines are concurrent for one thread like threads in preemptive Linux OS.
+For all scenarios, tNum > gNum or tNum <= gNum, because Go Scheduler has chance to take effect by calling in runtime.Gosched(), the main Goroutine has chance to be run. Note, even every thread is running an infinite loop, if Go Scheduler comes to play, every Goroutines has chance to run in the same thread, i.e. Goroutines are concurrent for one thread like threads in preemptive Linux OS.
 
 That is why x is not zero. Because main Goroutine run concurrently with a Goroutine which increments x in the same thread, main Goroutine will see the updated x. 
 
