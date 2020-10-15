@@ -25,14 +25,14 @@ func main() {
 }
 ```
 
-From the author's pratice, if the number of Goroutines is one less than the number of cpu core of the machine by changing the code to 
-```threads := runtime.GOMAXPROCS(0)-1```, x will be printed as 0. If the number of Gorouines is equal to the numbrer of cpu core, the program does not terminate, i.e. no return with x not be printed.
+From the author's pratice, if the number of Goroutines is one less than the number of CPU core of the machine by changing the code to 
+```threads := runtime.GOMAXPROCS(0)-1```, x will be printed as 0. If the number of Gorouines is equal to the numbrer of CPU core, the program does not terminate, i.e. no return with x not be printed.
 
-NOTE: for MAC OS, the number of cpu core reported by Go is virtual which is the double of real cpu core number, e.g., In Mac OS, if your machine has cpu core of 4, runtime.GOMAXPROCS(0) returns 8. But if you have virtual Linux in MAC, runtime.GOMAXPROCS(0) returns 4.
+NOTE: for MAC OS, the number of CPU core reported by Go is virtual which is the double of real CPU core number, e.g., In Mac OS, if your machine has CPU core of 4, runtime.GOMAXPROCS(0) returns 8. But if you have virtual Linux in MAC, runtime.GOMAXPROCS(0) returns 4.
 
 I supposed the code in the article is run in Linux. I tested the above code in my virtual Linux (by [Multipass](https://github.com/canonical/multipass)) which is Ubuntu 20.04.1 LTS in my Mac host. The Go runtime version is 1.14.5 linux/amd64.
 
-In my Mac, which is 4 cpu core, I tried to run 
+In my Mac, which is 4 CPU core, I tried to run 
 
 ```
 GOMAXPROCS=3 go run x.go
@@ -135,7 +135,7 @@ When we create a Goroutine like ```go func()...```, we just add a new task entry
 
 So here Goroutine == task.
 
-Threads in Go will be scheduled to each cpu core to run. For each core (assuming all core are used), there is a task queue(**LRQ**). Tasks in GRQ will be distributed to LRQ. And each task from LRQ will be run in a thread which goes to a core. 
+Threads in Go will be scheduled to each CPU core to run. For each core (assuming all core are used), there is a task queue(**LRQ**). Tasks in GRQ will be distributed to LRQ. And each task from LRQ will be run in a thread which goes to a core. 
 
 The following 4 points are the keys of Go Scheduler.
 
@@ -145,7 +145,7 @@ The following 4 points are the keys of Go Scheduler.
 
 3. Task schedule overhead is 1 tenth of thread switch overhead. Average overhead for thread switch is a couple of microseconds. Average overhead for task switch is hundreds of nanoseconds.
 
-4. If a task will be blocked, Go will deal with the blocked task specially to make the cpu core available for a running thread to run next task. i.e. **A thread running in the core (for current LRQ) never block**. Please read the following details.
+4. If a task will be blocked, Go will deal with the blocked task specially to make the CPU core available for a running thread to run next task. i.e. **A thread running in the core (for current LRQ) never block**. Please read the following details.
 
 Each length of LRQ is dynamic because some tasks finish quickly, some one will block. When a thread is scheduled to an empty LRQ, the Go runtime can steal some tasks from other LRQ. So the lengths of LRQ are balanced.
 
@@ -153,7 +153,7 @@ If the task is blocked for I/O of networking, Go runtime applies epoll/IOCP(IO C
 
 If the task is blocked for I/O of disk in Linux, the thread will be blocked. But Go runtime knows that. So a new thread (probabally an idle thread) will take over the current LRQ. The blocked thread with the blocked task will wait to finish, i.e. until unblocked. After the blocked disk call finishs, the Goroutine will return to the LRQ, and the unused thread can return to the idle thread pool or be destroyed (usually no destroy). [There is a proposal for an improvement for this strategy if you want to dive deeper](http://pages.cs.wisc.edu/~riccardo/assets/diskio.pdf).
 
-Again, a thread running in a cpu core, for the current LRQ, never block in Go.
+Again, a thread running in a CPU core, for the current LRQ, never block in Go. But note, the blocked thread could be replaced by another running thread for the same CPU core. The guarentee of running for ever is for the LRQ, not the specific thread.
 
 The I/O for disk is so special in Linux because regular file descriptor are always blocked device.
 
@@ -174,19 +174,19 @@ But if your Goroutine run an infinite loop, there is no chance for Go Scheduler 
 
 e.g. 1
 
-Assuming a machine has 4 cpu cores and we set GOMAXPROCS = 3.
+Assuming a machine has 4 CPU cores and we set GOMAXPROCS = 3.
 
 We create 3 Goroutines, and Go runtime may create 3 user-code threads for the tasks. After each Goroutine finish in each thread. The threads will be reclaimed or return to a thread pool to rest.
 
 e.g. 2
 
-Assuming a machine has 4 cpu cores, we create 8 Goroutines, and GOMAXPROCS = 4. 
+Assuming a machine has 4 CPU cores, we create 8 Goroutines, and GOMAXPROCS = 4. 
 
 Go runtime may create four user-code threads, each thread run each core with a task queue of length 2.
 
 e.g. 3
 
-Assuming a machine have 4 cpu cores and we set GOMAXPROCS = 5.
+Assuming a machine have 4 CPU cores and we set GOMAXPROCS = 5.
 
 There are four LRQs for the cores.
 
@@ -253,17 +253,17 @@ Then gNum+1 Goroutines will be distributed to all LRQs.
 
 The main Goroutine will run first. Because main call sleep() for one second, the main Goroutine will be moved out of the LRQ. One second later, main Goroutine will come back to one LRQ. And the main Goroutine state is runnable at this point of time.
 
-In the duration of the one second, each thread of tNum threads will have a chance to run in one cpu core because Linux is preemptive. Each thread needs to pick a runnable Goroutine from one LRQ. All but main Goroutines run an infinite loop. So each Goroutine except the main Goroutine will change state from runnable to running if there are enough threads. And the states of corresponded thread are also running. 
+In the duration of the one second, each thread of tNum threads will have a chance to run in one CPU core because Linux is preemptive. Each thread needs to pick a runnable Goroutine from one LRQ. All but main Goroutines run an infinite loop. So each Goroutine except the main Goroutine will change state from runnable to running if there are enough threads. And the states of corresponded thread are also running. 
 
 If tNum > gNum, there is at least one thread which state is not running, and when the runnable thread come to run, it needs to pick a runnable Goroutine. There is only one candidate which is the come-back main Goroutine. At this point of time, it will call exit() implicitly and return to OS. 
 
 If tNum <= gNum, no runnable thread is available. Every thread is busy running. Although a runnable main Goroutine is in one LRQ, because each thread is busy running an infinite loop, there is no chance to call into Go runtime which can schedule for the runnable main Goroutine in the same thread. In other words, cuncurrency for Goroutine is disabled.
 
-Note: tNum can be greater than the number of cpu core, and a LRQ is corresponded to a cpu core. In this scenario, the gNum task will make all of thread to be running (and forever) for it if gNum >= tNum. E.g. When tNum = 5, gNum = 5, five threads running five infinite loops in four cpu core, which are scheduled and switched to run in every cpu core by Linux OS by preemtion. The main task has no chance to be run in any thread because all threads are running. So no return and x does not be printed.
+Note: tNum can be greater than the number of CPU core, and a LRQ is corresponded to a CPU core. In this scenario, the gNum task will make all of thread to be running (and forever) for it if gNum >= tNum. E.g. When tNum = 5, gNum = 5, five threads running five infinite loops in four CPU core, which are scheduled and switched to run in every CPU core by Linux OS by preemtion. The main task has no chance to be run in any thread because all threads are running. So no return and x does not be printed.
 
-x is printed as 0, because x is cached for each thread. For example, x is located in the register of a cpu core, and when a thread context switch, the register values are saved and restored for switch. And because tNum > gNum, the thread to deal with the come-back main Goroutine has no relation with the gNum threads which increment the x in their thread register.
+x is printed as 0, because x is cached for each thread. For example, x is located in the register of a CPU core, and when a thread context switch, the register values are saved and restored for switch. And because tNum > gNum, the thread to deal with the come-back main Goroutine has no relation with the gNum threads which increment the x in their thread register.
 
-I do not think x is in L1 cache. There are thread switchs if tNum is bigger than the number of cpu cores. If x is in L1 cache, it would be flushed to main memory with some value when thread context switch. Then when the thread come to run main Goroutine, it will get the updated value from main memory. It could not be zero in this situation.
+I do not think x is in L1 cache. There are thread switchs if tNum is bigger than the number of CPU cores. If x is in L1 cache, it would be flushed to main memory with some value when thread context switch. Then when the thread come to run main Goroutine, it will get the updated value from main memory. It could not be zero in this situation.
 
 #### For adding runtime.Gosched()
 
