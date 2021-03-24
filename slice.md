@@ -95,11 +95,16 @@ You can check the trick in the following Golang code.
 ```
 b := make([]int, 5, 10)
 b = b[2:9]
+fmt.Println(len(b), cap(b))
 b = b[4:]
 fmt.Println(len(b), cap(b))
 ```
 
-The output is: len(b) = 3, cap(b) = 4.
+The output is: 
+```
+first Println: len(b) = 7, cap(b) = 8
+second Println: len(b) = 3, cap(b) = 4.
+```
 
 # Example one
 ## Code
@@ -211,6 +216,161 @@ Because in f(), the _ptr in s is pointed to another array, a totally new array, 
 After make(), s->_ptr in f() is different from b->_ptr, so the backed arrays are different.
 
 In example one, the _ptr in s and b is same, i.e. the backed array does not change.
+
+# slice and array
+
+Golang can let you define a type of array.
+
+```
+a := [4]int
+b := []int
+```
+
+a is array of int. b is slice of int.
+
+But most of time, we use slice, not array directly.
+
+# slice can share internal array or not
+```
+a := make([]int, 6)
+b := a[2, 4]
+c := make([]int, 2)
+``` 
+
+a, b, c are three object of slice. But a and b share the interanl backed array and c use another array.
+
+So in the above code, there are three slice object and two array internal.
+
+# Golang copy of slice
+
+## copy slice but using different interanl array
+```
+func main() {
+	a := make([]int, 6)
+	for i := 0; i < 6; i++ {
+		a[i] = i + 1
+	}
+	fmt.Println(a)
+	fmt.Println()
+
+	b := make([]int, 2)
+	copy(b, a)
+
+	fmt.Println(a)
+	fmt.Println(b)
+}
+```
+
+The output is 
+```
+[1 2 3 4 5 6]
+
+[1 2 3 4 5 6]
+[1 2]
+```
+
+## copy slice but using the same internal array
+
+```
+func main() {
+	a := make([]int, 6)
+	for i := 0; i < 6; i++ {
+		a[i] = i + 1
+	}
+	fmt.Println(a)
+	fmt.Println()
+
+	b := a[2:4]
+	copy(b, a)
+
+	fmt.Println(a)
+	fmt.Println(b)
+}
+```
+
+The output is
+```
+[1 2 3 4 5 6]
+
+[1 2 1 2 5 6]
+[1 2]
+```
+
+Golang document says it can handle copy for slice with different or same backed internal array. [Check here.](https://blog.golang.org/slices-intro)
+
+# append to Slice with the same internal backed array
+
+We know we can make two Slice share the same backed aray. But if append(), what happens
+
+## overflow of capacity
+
+```
+func main() {
+	a := make([]int, 6)
+	for i := 0; i < 6; i++ {
+		a[i] = i + 1
+	}
+
+	b := a
+	b = append(b, 7)
+
+	fmt.Println(a)
+	fmt.Println(b)
+	fmt.Println()
+
+	b[0] = 0
+	fmt.Println(a)
+	fmt.Println(b)
+}
+```
+
+The output is 
+```
+1 2 3 4 5 6]
+[1 2 3 4 5 6 7]
+
+[1 2 3 4 5 6]
+[0 2 3 4 5 6 7]
+```
+
+a and b share the same backed array. But after append(), things change. Because b can not accomdate the capacity of 7, it needs an new allocated array for append(), so first copy then append the new array.
+
+In the above code, a and b have different backed array in the end.
+
+## not overflow of capacity
+
+```
+func main() {
+	a := make([]int, 6, 7)
+	for i := 0; i < 6; i++ {
+		a[i] = i + 1
+	}
+
+	b := a
+	b = append(b, 7)
+
+	fmt.Println(a)
+	fmt.Println(b)
+	fmt.Println()
+
+	b[0] = 0
+	fmt.Println(a)
+	fmt.Println(b)
+}
+```
+
+The output is 
+```
+1 2 3 4 5 6]
+[1 2 3 4 5 6 7]
+
+[0 2 3 4 5 6]
+[0 2 3 4 5 6 7]
+```
+
+This time, we make a has capacity of 7. So when a is appended, the capacity is OK for the same internal backed array.
+
+In the above code, a and b alwayrs share the same backed array before and after append().
 
 # Slice nil
 
