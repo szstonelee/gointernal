@@ -136,9 +136,9 @@ The complexity of dynamic building is O(m+n), m == the number of concrete struct
 
 Beside the itable, iterface has one more field, the value part. You can imagine it of combination of a value type and the reference to a copy of the concrete value. 
 
-Actually in memory it only needs to hold the data pointer, which is like void* in c++, because type of data can be known in compile time, so runtime does not need to save it in Interface for memory saving. But you need know that in logic, Golang know everything about the internal concrete part of the interface, the type of concrete value and the pointer to the concrete value.
+Actually in memory it only needs to hold the data pointer, which is like void* in c++, because type of data can be known in compile time, so runtime does not need to save it in Interface for memory saving. But you need know that in logic, Golang know everything about the internal concrete part of the interface, the type of concrete value and the reference to the concrete value (NOTE: we does not use the raw pointer for C++, because it is easy to beconfused with the syntax meaning of the pointer in Golang).
 
-After assignment, the value part is unchangeable until another assignment to the interface variable, just like itable. NOTE: if the value part is an pointer to concrete value, only the pointer itself is unchangeable. The concrete value which is pointed by the pointer can be changed.
+After assignment, the value part is unchangeable until another assignment to the interface variable, just like itable. NOTE: if the value part is an pointer (Golang pointer) to concrete value, only the pointer itself is unchangeable. The concrete value which is pointed by the pointer can be changed.
 
 ### assignment to interface, copy happens
 
@@ -212,7 +212,9 @@ func main() {
 
 Note: pointer to interface is rarely used.
 
-But you can assign an interface variable to another interface variable. Copy happens again. The concrete value is duplicated in each interface variable. So if you want all the interface variables share something, please copy a concrete pointer.
+But you can assign an interface variable to another interface variable. Copy happens again. The concrete value is duplicated in each interface variable. So if you want all the interface variables share something, please assign an interface variable with a concrete pointer. So after the afterards assignment of interface, each interface variable hold a copy of pointer, which point to the same concrete value. This way, only one object for concrete value exist.
+
+[The reason for the difference treatment for pointer and concrete is here](https://golang.org/doc/faq#Functions_methods)
 
 ### Golang Interface is not this pointer in C++
 
@@ -267,87 +269,6 @@ i.NewVal() ->(calling to) NewVal(copy of concrete Implementation, int n)
 ```
 
 If you want change the state of Implementation. You need define the interface for ```v *Implementation```, not ```v Implementation```. 
-
-### concrete type for Interface
-
-Concrete value could be:
-1. the copy of the memory with the type of struct OR 
-2. the copy of the memory with the pointer, which points to an entity of type of struct 
-3. can not be any interface (and pointer to an interface)
-
-The following code which is part of the above can demonstrate
-```
-	v3, ok3 := h.(cooler)
-	if ok3 {
-		fmt.Printf("h, interface heater, assert interface cooler, type = %T, val = %v\n", v3, v3)
-	}
-```
-
-If h does not hold the copy of real value with the type struct of someThing, 
-
-it can not assert sucessuflly for the interface cooler.
-
-### Assginment to interface with concrete value or another interface
-
-```
-some := someThing{name: "Stone:}
-
-var h1 heater
-var h2 heater
-var any interface{}
-
-h1 = some
-any = some
-
-h2 = any  
-```
-
-h1 and h2 have the same concrete value, i.e. "Stone", but they are different copies
-
-#### the concrete value can be pointer to struct or struct itself if the receiver is struct
-
-check pointer_interface.go for demonstration
-
-```
-type itfer interface {Dummy()}
-
-type foo struct{}
-
-func (f foo) Dummy() {}
-
-func main() {
-	var f1 foo
-	var f2 *foo = &foo{}
-
-	var i1 itfer = f1
-	fmt.Printf("i1 from f1, type = %T\n", i1)
-	var i2 itfer = f2
-	fmt.Printf("i2 from f2, type = %T\n", i2)
-}
-```
-
-#### the concrete value must be pointer to struct if the receiver is a pointer
-
-check pointer_interface.go for demonstration
-
-```
-type itfer interface {Dummy()}
-
-type bar struct{}
-
-func (b *bar) Dummy() {}
-
-func main() {
-	var b1 bar
-	var b2 *bar = &b1
-
-	// var i3 itfer = b1	// NOTE: compile fail
-	var i4 itfer = b2
-	fmt.Printf("i4 from b2, type = %T\n", i4)
-}
-```
-
-[The reason for the difference treatment for pointer and concrete is here](https://golang.org/doc/faq#Functions_methods)
 
 ### Type assertion with interface
 
