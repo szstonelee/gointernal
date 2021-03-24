@@ -110,37 +110,165 @@ NOTE: github has more code than above, so it needs to run like this
 
 go run interface_internal.go pointer_interface.go 
 
-## My Opinion & Guess
+## Internal of Golang Interface
 
-### Interface composed of two internal references 
+### Interface composed of two parts: each part hold an internal reference 
 
-Under hood, the interface is composed of two referecnes, each reference is one word size in memory. 
+Under hood, the interface is composed of two parts, each one holds an internal reference (or pointer) with the knowledge of the concrete type. 
 
-You can imagine the references similar to Java reference or C++ smart pointer. 
+You can imagine the references similiar to Java reference or C++ pointer, but be careful, it is totolly different from C++ and Java, please check all the following stuff.
 
-### The first reference: itable + value type
+### The first part -- itable part: itable + value type
 
-#### dynamic itable
+The reference in first part is the dynamic itable which is built dynamically, i.e. in runtime.
 
-The first reference is the dynamic itable which is built dynamically, i.e. in runtime.
+You can imagine itable similiar to Java Interface or C++ vtable, but Java and C++ implement it statically, i.e. in compile time.
 
-You can imagine itable similar to Java Interface or C++ vtable, but Java and C++ implement it statically, i.e. in compile time.
+itable, Java Interface, C++ vtable are similiar. All are a table of pointers to contract function.
 
-Itable will be built first time with assignment, then be cached. 
+Itable will be built first time when an interface variable is initialized, i.e.,  with an assignment.
 
-The complexity is O(m+n), m == the number of concrete struct methods, n == the number of interface methods. 
+Then the itable will be cached and the same type of itable can be lookuped for efficiency. So dynamic building cost is tiny, only once.
 
-#### value type
+The complexity of dynamic building is O(m+n), m == the number of concrete struct methods, n == the number of interface methods. Because the lookup is for the alphabetic order of function signature.
 
-The first reference has one more field, the value type, which is paired with the second reference to describe the data.
+### The second part -- value part: a copy of concrete value + value type 
 
-After assignment, the value type in first reference is unchangeable until another assignment to the interface variable, just like itable.
+Beside the itable, iterface has one more field, the value part. You can imagine it of combination of a value type and the reference to a copy of the concrete value. 
 
-### The second reference: the copy of concrete value
+Actually in memory it only needs to hold the data pointer, which is like void* in c++, because type of data can be known in compile time, so runtime does not need to save it in Interface for memory saving. But you need know that in logic, Golang know everything about the internal concrete part of the interface, the type of concrete value and the pointer to the concrete value.
 
-The second reference is the copy of the concrete value, which can not be an interface. [Interfaces do not hold interface values](https://blog.golang.org/laws-of-reflection)
+After assignment, the value part is unchangeable until another assignment to the interface variable, just like itable. NOTE: if the value part is an pointer to concrete value, only the pointer itself is unchangeable. The concrete value which is pointed by the pointer can be changed.
 
-I do not try the pointer to interface, but I think it is illegal as interface itself. Note: pointer to interface is rarely used.
+### assignment to interface, copy happens
+
+Golang uses copy everywhere. When assignment from a concrete value to a interface, copy happens.
+
+```
+package main
+
+import "fmt"
+
+type Interface interface {
+	String() string
+}
+
+type Implementation struct {
+	val int
+}
+
+func (v Implementation) String() string {
+	return fmt.Sprintf("My internal value = %v", v.val)
+}
+
+func main() {
+	var i Interface
+	impl := Implementation{22}
+	i = impl	
+	fmt.Println(i.String())
+	fmt.Println("")
+	
+	impl = Implementation{333}
+	fmt.Println(i.String())
+	fmt.Println(impl.String())
+}
+```
+
+The output is 
+```
+My internal value = 22
+
+My internal value = 22
+My internal value = 333
+```
+
+Why? Because in ```i = impl```， an copy happens, there are two object, impl and a copy of impl which is hold by the interface i in the second part.
+
+### Interface need reference concrete type, not an interface again
+
+The second part is the copy of the concrete value, which can not be an interface. 
+
+[Interfaces do not hold interface values](https://blog.golang.org/laws-of-reflection)
+
+So if you try to init an interface which try to hold a pointer to interface, it is illegal.
+
+```
+type myStruct struct { name string }
+type myInterface interface {
+	method()
+}
+
+func (myStruct) method() {}		// so myStruct implements interface of myInterface
+
+func main() {
+	var v = myStruct{ name: "stone" }
+	var i1 myInterface = v			// OK, assign concrete v to an interface variable i1
+
+	var i2 interface{} = &i1		// this is illegal, because i2's concrete part will try to hold a pointer of interface
+	var i2 interface{} = &v			// this is legal, i2 can set concrete part of pointer of concrete value
+}
+
+```
+
+Note: pointer to interface is rarely used.
+
+But you can assign an interface variable to another interface variable. Copy happens again. The concrete value is duplicated in each interface variable. So if you want all the interface variables share something, please copy a concrete pointer.
+
+### Golang Interface is not this pointer in C++
+
+I have maken a mistake for Interface. I used to think, the method of interface is like C++ this pointer for Class method.
+
+It is not true. Please check the follwoing code.
+
+```
+package main
+
+import "fmt"
+
+type Interface interface {
+	String() string
+	NewVal(n int) 
+}
+
+type Implementation struct {
+	val int
+}
+
+func (v Implementation) String() string {
+	return fmt.Sprintf("My internal value = %v", v.val)
+}
+
+func (v Implementation) NewVal(n int) {
+	v.val = n
+}
+
+func main() {
+	var i Interface
+	impl := Implementation{22}
+	i = impl	
+	
+	i.NewVal(333)
+	fmt.Println(i.String())
+	fmt.Println(impl.String())
+}
+```
+
+The output is 
+```
+My internal value = 22
+My internal value = 22
+```
+
+SetVal(333) takes no effect. If you inmagine it as C++, it is impossible. In C++, we use this pointer, and SetVal() will change the val state of this.
+
+But in Golang, copy is everywhere. So 
+```
+i.NewVal() ->(calling to) NewVal(copy of concrete Implementation, int n)
+```
+
+If you want change the state of Implementation. You need define the interface for ```v *Implementation```, not ```v Implementation```. 
+
+### concrete type for Interface
 
 Concrete value could be:
 1. the copy of the memory with the type of struct OR 
