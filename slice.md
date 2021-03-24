@@ -333,7 +333,7 @@ The output is
 [0 2 3 4 5 6 7]
 ```
 
-a and b share the same backed array. But after append(), things change. Because b can not accomdate the capacity of 7, it needs an new allocated array for append(), so first copy then append the new array.
+a and b share the same backed array at the beginning. But after append(), things change. Because b can not accomdate the capacity of 7, it needs an new allocated array for append(), so first copy then append the new array.
 
 In the above code, a and b have different backed array in the end.
 
@@ -361,14 +361,14 @@ func main() {
 
 The output is 
 ```
-1 2 3 4 5 6]
+[1 2 3 4 5 6]
 [1 2 3 4 5 6 7]
 
 [0 2 3 4 5 6]
 [0 2 3 4 5 6 7]
 ```
 
-This time, we make a has capacity of 7. So when a is appended, the capacity is OK for the same internal backed array.
+This time, we make a with capacity of 7. So when a is appended, the capacity is OK for the same internal backed array.
 
 In the above code, a and b alwayrs share the same backed array before and after append().
 
